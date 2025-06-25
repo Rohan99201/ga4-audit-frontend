@@ -3,8 +3,8 @@ import axios from "axios";
 
 function App() {
   const [propertyId, setPropertyId] = useState("");
-  const [startDate, setStartDate] = useState("Enter Start Date (YYYY-MM-DD)");
-  const [endDate, setEndDate] = useState("Enter End Date (YYYY-MM-DD)");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [data, setData] = useState(null);
 
   const runAudit = async () => {
@@ -58,7 +58,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date"
+              placeholder="Start Date (YYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -67,7 +67,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date"
+              placeholder="End Date (YYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
