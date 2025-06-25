@@ -9,7 +9,7 @@ function App() {
 
   const runAudit = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/run-audit", {
+      const res = await axios.get("https://ga4-audit-backend.onrender.com/run-audit", {
         params: { property_id: propertyId, start_date: startDate, end_date: endDate },
       });
       setData(res.data.data);
