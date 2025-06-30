@@ -1,90 +1,163 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import axios from "axios";
 
 function App() {
   const [propertyId, setPropertyId] = useState("");
-  const [startDate, setStartDate] = useState("30daysAgo");
-  const [endDate, setEndDate] = useState("today");
-  const [loading, setLoading] = useState(false);
-  const [auditData, setAuditData] = useState(null);
-  const [error, setError] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [data, setData] = useState(null);
 
   const runAudit = async () => {
-    if (!propertyId) return alert("Enter Property ID");
-    setLoading(true);
-    setError("");
-    setAuditData(null);
     try {
-      const res = await fetch("https://ga4-audit-backend.onrender.com/run-audit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ property_id: propertyId, start_date: startDate, end_date: endDate })
+      const res = await axios.get("https://ga4-audit-backend.onrender.com/run-audit", {
+        params: { property_id: propertyId, start_date: startDate, end_date: endDate },
       });
-      const data = await res.json();
-      if (data.success) setAuditData(data.data);
-      else setError("Something went wrong");
-    } catch (e) {
-      setError("API Error: " + e.message);
-    } finally {
-      setLoading(false);
+      setData(res.data.data);
+    } catch (err) {
+      alert("Audit failed: " + err.message);
     }
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
-      <h1>🔍 GA4 Audit Tool</h1>
-      <input
-        type="text"
-        placeholder="GA4 Property ID"
-        value={propertyId}
-        onChange={(e) => setPropertyId(e.target.value)}
-        style={{ padding: "0.5rem", marginRight: "1rem" }}
-      />
-      <input
-        type="text"
-        placeholder="Start Date (e.g. 30daysAgo)"
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-        style={{ padding: "0.5rem", marginRight: "1rem" }}
-      />
-      <input
-        type="text"
-        placeholder="End Date (e.g. today)"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-        style={{ padding: "0.5rem", marginRight: "1rem" }}
-      />
-      <button onClick={runAudit} disabled={loading} style={{ padding: "0.5rem 1rem" }}>
-        {loading ? "Running..." : "Run Audit"}
-      </button>
+    <div
+      className="container-fluid p-5"
+      style={{
+        backgroundImage: url('/ga4.jpg'),
+        backgroundSize: "cover",
+        minHeight: "100vh",
+        color: "#fff",
+      }}
+    >
+      <div   className="container text-dark p-4 rounded shadow"
+  style={{
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    backdropFilter: "blur(8px)",
+  }}
+>
+        <h1 className="text-primary mb-4 text-center">
+          <img
+            src="https://www.gstatic.com/analytics-suite/header/suite/v2/ic_analytics.svg"
+            alt="GA4"
+            width="30"
+            className="me-2"
+          />
+          GA4 Audit Dashboard
+        </h1>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {auditData &&
-        Object.entries(auditData).map(([section, rows]) => (
-          <div key={section} style={{ marginTop: "2rem" }}>
-            <h2>{section}</h2>
-            <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
-              <thead>
-                <tr>
-                  {Object.keys(rows[0] || {}).map((col) => (
-                    <th key={col}>{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, i) => (
-                  <tr key={i}>
-                    {Object.values(row).map((val, j) => (
-                      <td key={j}>{val}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="row g-3 mb-4">
+          <div className="col-md-4">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="GA4 Property ID"
+              value={propertyId}
+              onChange={(e) => setPropertyId(e.target.value)}
+            />
           </div>
-        ))}
+          <div className="col-md-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Start Date (YYYY-MM-DD)"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="col-md-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="End Date (YYYY-MM-DD)"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+          <div className="col-md-2">
+            <button className="btn btn-primary w-100" onClick={runAudit}>
+              Run Audit
+            </button>
+          </div>
+        </div>
+
+        {data &&
+          Object.entries(data).map(([section, entries]) => (
+            <div key={section} className="mb-5">
+              <h3 className="text-secondary">{section}</h3>
+
+              {/* Custom handling for transaction_mapping */}
+              {section === "transaction_mapping" ? (
+                <div className="row">
+                  <div className="col-md-6">
+                    <h5>Transaction Revenue</h5>
+                    <table className="table table-bordered table-sm table-hover">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Transaction ID</th>
+                          <th>Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {entries
+                          .filter((e) => e.source === "Revenue Table")
+                          .map((entry, index) => (
+                            <tr key={index}>
+                              <td>{entry.transactionId}</td>
+                              <td>{entry.revenue}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="col-md-6">
+                    <h5>Items in Purchase Events</h5>
+                    <table className="table table-bordered table-sm table-hover">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Item ID</th>
+                          <th>Item Name</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {entries
+                          .filter((e) => e.source === "Item Table")
+                          .map((entry, index) => (
+                            <tr key={index}>
+                              <td>{entry.itemId}</td>
+                              <td>{entry.itemName}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-bordered table-sm table-hover">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Check</th>
+                        <th>Result</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {entries.map((entry, index) => (
+                        <tr key={index}>
+                          <td>{entry.Check || entry.transactionId || entry.itemId}</td>
+                          <td>{entry.Result || entry.revenue || entry.itemName}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ))}
+      </div>
     </div>
   );
 }
 
 export default App;
+
+app.jsx
