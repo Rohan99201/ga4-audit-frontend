@@ -16,7 +16,6 @@ function App() {
           end_date: endDate,
         },
       });
-      console.log("Audit Response:", res.data); // Debug
       setData(res.data.data);
     } catch (err) {
       alert("Audit failed: " + err.message);
@@ -24,23 +23,68 @@ function App() {
     }
   };
 
+  const renderTable = (entries, type) => (
+    <div className="table-responsive">
+      <table className="table table-bordered table-sm table-hover">
+        <thead className="table-light">
+          <tr>
+            {type === "transaction" ? (
+              <>
+                <th>Transaction ID</th>
+                <th>Revenue</th>
+              </>
+            ) : type === "item" ? (
+              <>
+                <th>Transaction ID</th>
+                <th>Item ID</th>
+                <th>Item Name</th>
+              </>
+            ) : (
+              <>
+                <th>Check</th>
+                <th>Result</th>
+              </>
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry, index) => (
+            <tr key={index}>
+              {type === "transaction" && (
+                <>
+                  <td>{entry.transactionId}</td>
+                  <td>{entry.revenue}</td>
+                </>
+              )}
+              {type === "item" && (
+                <>
+                  <td>{entry.transactionId}</td>
+                  <td>{entry.itemId}</td>
+                  <td>
+                    {entry.itemName === "(not set)" || !entry.itemName ? (
+                      <span className="text-danger">⚠️ Not Set</span>
+                    ) : (
+                      entry.itemName
+                    )}
+                  </td>
+                </>
+              )}
+              {!type && (
+                <>
+                  <td>{entry.Check || entry.transactionId || entry.itemId}</td>
+                  <td>{entry.Result || entry.revenue || entry.itemName}</td>
+                </>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
-    <div
-      className="container-fluid p-5"
-      style={{
-        backgroundImage: `url('/ga4.jpg')`,
-        backgroundSize: "cover",
-        minHeight: "100vh",
-        color: "#fff",
-      }}
-    >
-      <div
-        className="container text-dark p-4 rounded shadow"
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.7)",
-          backdropFilter: "blur(8px)",
-        }}
-      >
+    <div className="container-fluid p-5" style={{ background: "#f4f4f4", minHeight: "100vh" }}>
+      <div className="container bg-white p-4 rounded shadow">
         <h1 className="text-primary mb-4 text-center">
           <img
             src="https://www.gstatic.com/analytics-suite/header/suite/v2/ic_analytics.svg"
@@ -86,107 +130,25 @@ function App() {
           </div>
         </div>
 
-        {data && typeof data === "object" ? (
-          Object.entries(data).map(([section, entries]) => {
-            if (!Array.isArray(entries)) return null;
+        {data ? (
+          Object.entries(data).map(([section, entries]) => (
+            <div key={section} className="mb-5">
+              <h4 className="text-secondary mb-3">{section}</h4>
+              {section === "Transaction Mapping"
+                ? (
+                    <>
+                      <h6>Revenue Entries</h6>
+                      {renderTable(entries.filter(e => e.source === "Revenue Table"), "transaction")}
 
-            return (
-              <div key={section} className="mb-5">
-                <h3 className="text-secondary">{section}</h3>
-
-                {section === "Transaction Mapping" ? (
-                  <div className="row">
-                    <div className="col-md-6">
-                      <h5>Transaction Revenue</h5>
-                      <table className="table table-bordered table-sm table-hover">
-                        <thead className="table-light">
-                          <tr>
-                            <th>Transaction ID</th>
-                            <th>Revenue</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {entries
-                            .filter((e) => e.source === "Revenue Table")
-                            .map((entry, index) => (
-                              <tr key={index}>
-                                <td>{entry.transactionId}</td>
-                                <td>{entry.revenue}</td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="col-md-6">
-                      <h5>Items in Purchase Events</h5>
-                      <table className="table table-bordered table-sm table-hover">
-                        <thead className="table-light">
-                          <tr>
-                            <th>Transaction ID</th>
-                            <th>Item ID</th>
-                            <th>Item Name</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {entries
-                            .filter((e) => e.source === "Item Table")
-                            .map((entry, index) => (
-                              <tr key={index}>
-                                <td>{entry.transactionId}</td>
-                                <td>{entry.itemId}</td>
-                                <td>
-                                  {entry.itemName === "(not set)" ||
-                                  entry.itemName === "" ||
-                                  entry.itemName === null ? (
-                                    <span className="text-danger">⚠️ Not Set</span>
-                                  ) : (
-                                    entry.itemName
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table table-bordered table-sm table-hover">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Check</th>
-                          <th>Result</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {entries.map((entry, index) => (
-                          <tr key={index}>
-                            <td>
-                              {entry.Check ||
-                                entry.transactionId ||
-                                entry.itemId ||
-                                entry.eventName ||
-                                "—"}
-                            </td>
-                            <td>
-                              {entry.Result ||
-                                entry.revenue ||
-                                entry.itemName ||
-                                entry.duplicateCount ||
-                                "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            );
-          })
+                      <h6 className="mt-4">Item Entries</h6>
+                      {renderTable(entries.filter(e => e.source === "Item Table"), "item")}
+                    </>
+                  )
+                : renderTable(entries)}
+            </div>
+          ))
         ) : (
-          <p className="text-danger">No audit data found or invalid response.</p>
+          <p className="text-muted text-center">Enter details and click "Run Audit" to begin.</p>
         )}
       </div>
     </div>
