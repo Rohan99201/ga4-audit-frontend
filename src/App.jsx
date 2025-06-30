@@ -6,15 +6,26 @@ function App() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const runAudit = async () => {
+    setLoading(true);
+    setError(null); // Clear previous errors
+    setData(null); // Clear previous data
     try {
       const res = await axios.get("https://ga4-audit-backend.onrender.com/run-audit", {
         params: { property_id: propertyId, start_date: startDate, end_date: endDate },
       });
-      setData(res.data.data);
+      if (res.data.success) {
+        setData(res.data.data);
+      } else {
+        setError(res.data.error || "An unknown error occurred during audit.");
+      }
     } catch (err) {
-      alert("Audit failed: " + err.message);
+      setError("Audit failed: " + (err.response?.data?.error || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -22,18 +33,19 @@ function App() {
     <div
       className="container-fluid p-5"
       style={{
-        backgroundImage: url('/ga4.jpg'),
-        backgroundSize: "cover",
+        backgroundColor: "#282c34", // Simple background color
         minHeight: "100vh",
         color: "#fff",
+        fontFamily: "Inter, sans-serif",
       }}
     >
-      <div   className="container text-dark p-4 rounded shadow"
-  style={{
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    backdropFilter: "blur(8px)",
-  }}
->
+      <div
+        className="container text-dark p-4 rounded shadow"
+        style={{
+          backgroundColor: "rgba(255, 255, 255, 0.9)", // Slightly more opaque for readability
+          backdropFilter: "blur(8px)",
+        }}
+      >
         <h1 className="text-primary mb-4 text-center">
           <img
             src="https://www.gstatic.com/analytics-suite/header/suite/v2/ic_analytics.svg"
@@ -49,7 +61,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID"
+              placeholder="GA4 Property ID (e.g., 343819188)"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -58,7 +70,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (YYYY-MM-DD)"
+              placeholder="Start Date (e.g., 30daysAgo or YYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -67,68 +79,89 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (YYYY-MM-DD)"
+              placeholder="End Date (e.g., today or YYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
           <div className="col-md-2">
-            <button className="btn btn-primary w-100" onClick={runAudit}>
-              Run Audit
+            <button className="btn btn-primary w-100" onClick={runAudit} disabled={loading}>
+              {loading ? "Running Audit..." : "Run Audit"}
             </button>
           </div>
         </div>
+
+        {error && (
+          <div className="alert alert-danger" role="alert">
+            Error: {error}
+          </div>
+        )}
+
+        {loading && (
+          <div className="text-center text-secondary">
+            <div className="spinner-border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p>Fetching data from GA4 API, this may take a moment...</p>
+          </div>
+        )}
 
         {data &&
           Object.entries(data).map(([section, entries]) => (
             <div key={section} className="mb-5">
               <h3 className="text-secondary">{section}</h3>
 
-              {/* Custom handling for transaction_mapping */}
-              {section === "transaction_mapping" ? (
+              {/* Custom handling for Transaction Mapping */}
+              {section === "Transaction Mapping" ? (
                 <div className="row">
                   <div className="col-md-6">
                     <h5>Transaction Revenue</h5>
-                    <table className="table table-bordered table-sm table-hover">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Transaction ID</th>
-                          <th>Revenue</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {entries
-                          .filter((e) => e.source === "Revenue Table")
-                          .map((entry, index) => (
-                            <tr key={index}>
-                              <td>{entry.transactionId}</td>
-                              <td>{entry.revenue}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
+                    <div className="table-responsive">
+                      <table className="table table-bordered table-sm table-hover">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Transaction ID</th>
+                            <th>Revenue</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {entries
+                            .filter((e) => e.source === "Revenue Table")
+                            .map((entry, index) => (
+                              <tr key={index}>
+                                <td>{entry.transactionId}</td>
+                                <td>{entry.revenue}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
 
                   <div className="col-md-6">
                     <h5>Items in Purchase Events</h5>
-                    <table className="table table-bordered table-sm table-hover">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Item ID</th>
-                          <th>Item Name</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {entries
-                          .filter((e) => e.source === "Item Table")
-                          .map((entry, index) => (
-                            <tr key={index}>
-                              <td>{entry.itemId}</td>
-                              <td>{entry.itemName}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
+                    <div className="table-responsive">
+                      <table className="table table-bordered table-sm table-hover">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Transaction ID</th>
+                            <th>Item ID</th>
+                            <th>Item Name</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {entries
+                            .filter((e) => e.source === "Item Table")
+                            .map((entry, index) => (
+                              <tr key={index}>
+                                <td>{entry.transactionId}</td>
+                                <td>{entry.itemId}</td>
+                                <td>{entry.itemName}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -136,17 +169,77 @@ function App() {
                   <table className="table table-bordered table-sm table-hover">
                     <thead className="table-light">
                       <tr>
-                        <th>Check</th>
-                        <th>Result</th>
+                        {/* Define headers based on section type */}
+                        {(section === "Property Details" ||
+                          section === "Streams Configuration" ||
+                          section === "GA4 Property Limits" ||
+                          section === "GA4 Events" ||
+                          section === "PII Check" ||
+                          section === "Transactions") && (
+                          <>
+                            <th>Check</th>
+                            <th>Result</th>
+                          </>
+                        )}
+                        {(section === "Transaction Where Item Data Missing" ||
+                          section === "Purchase Events Log") && (
+                          <>
+                            <th>Transaction ID</th>
+                            <th>Item ID</th>
+                            <th>Item Name</th>
+                            <th>Revenue</th>
+                          </>
+                        )}
+                        {section === "Duplicate Transactions" && (
+                          <>
+                            <th>Transaction ID</th>
+                            <th>Count</th>
+                          </>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
-                      {entries.map((entry, index) => (
-                        <tr key={index}>
-                          <td>{entry.Check || entry.transactionId || entry.itemId}</td>
-                          <td>{entry.Result || entry.revenue || entry.itemName}</td>
+                      {/* Render rows based on section type */}
+                      {Array.isArray(entries) && entries.length > 0 ? (
+                        entries.map((entry, index) => (
+                          <tr key={index}>
+                            {(section === "Property Details" ||
+                              section === "Streams Configuration" ||
+                              section === "GA4 Property Limits" ||
+                              section === "GA4 Events" ||
+                              section === "PII Check" ||
+                              section === "Transactions") && (
+                              <>
+                                <td>{entry.Check}</td>
+                                <td>
+                                  {typeof entry.Result === 'object' ? JSON.stringify(entry.Result) : entry.Result}
+                                </td>
+                              </>
+                            )}
+                            {(section === "Transaction Where Item Data Missing" ||
+                              section === "Purchase Events Log") && (
+                              <>
+                                <td>{entry.transactionId}</td>
+                                <td>{entry.itemId}</td>
+                                <td>{entry.itemName}</td>
+                                <td>{entry.revenue}</td>
+                              </>
+                            )}
+                            {section === "Duplicate Transactions" && (
+                              <>
+                                <td>{entry.transactionId}</td>
+                                <td>{entry.count}</td>
+                              </>
+                            )}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="2">
+                            {typeof entries === 'string' ? entries : "No data or all checks passed."}
+                          </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -159,5 +252,3 @@ function App() {
 }
 
 export default App;
-
-app.jsx
