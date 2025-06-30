@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+// No import needed for images in the public folder
 
 function App() {
   const [propertyId, setPropertyId] = useState("");
@@ -33,7 +34,9 @@ function App() {
     <div
       className="container-fluid p-5"
       style={{
-        backgroundColor: "#282c34", // Simple background color
+        backgroundImage: `url('/ga4.jpg')`, // Directly reference the image from the public folder
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         minHeight: "100vh",
         color: "#fff",
         fontFamily: "Inter, sans-serif",
@@ -61,7 +64,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID (e.g., 343819188)"
+              placeholder="GA4 Property ID"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -70,7 +73,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (e.g., 30daysAgo or YYYY-MM-DD)"
+              placeholder="Start Date (YYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -79,7 +82,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (e.g., today or YYYY-MM-DD)"
+              placeholder="End Date (YYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
