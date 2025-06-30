@@ -80,79 +80,79 @@ function App() {
         </div>
 
         {data &&
-          Object.entries(data).map(([section, entries]) => (
-            <div key={section} className="mb-5">
-              <h3 className="text-secondary">{section}</h3>
+  Object.entries(data).map(([section, entries]) => (
+    <div key={section} className="mb-5">
+      <h3 className="text-secondary">{section}</h3>
 
-              {/* Custom handling for transaction_mapping */}
-              {section === "transaction_mapping" ? (
-                <div className="row">
-                  <div className="col-md-6">
-                    <h5>Transaction Revenue</h5>
-                    <table className="table table-bordered table-sm table-hover">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Transaction ID</th>
-                          <th>Revenue</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {entries
-                          .filter((e) => e.source === "Revenue Table")
-                          .map((entry, index) => (
-                            <tr key={index}>
-                              <td>{entry.transactionId}</td>
-                              <td>{entry.revenue}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
+      {section === "transaction_mapping" ? (
+        <div className="row">
+          <div className="col-md-6">
+            <h5>Transaction Revenue</h5>
+            <table className="table table-bordered table-sm table-hover">
+              <thead className="table-light">
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries
+                  .filter((e) => e.source === "Revenue Table")
+                  .map((entry, index) => (
+                    <tr key={index}>
+                      <td>{entry.transactionId}</td>
+                      <td>{entry.revenue}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
 
-                  <div className="col-md-6">
-                    <h5>Items in Purchase Events</h5>
-                    <table className="table table-bordered table-sm table-hover">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Item ID</th>
-                          <th>Item Name</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {entries
-                          .filter((e) => e.source === "Item Table")
-                          .map((entry, index) => (
-                            <tr key={index}>
-                              <td>{entry.itemId}</td>
-                              <td>{entry.itemName}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-bordered table-sm table-hover">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Check</th>
-                        <th>Result</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {entries.map((entry, index) => (
-                        <tr key={index}>
-                          <td>{entry.Check || entry.transactionId || entry.itemId}</td>
-                          <td>{entry.Result || entry.revenue || entry.itemName}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          ))}
+          <div className="col-md-6">
+            <h5>Items in Purchase Events</h5>
+            <table className="table table-bordered table-sm table-hover">
+              <thead className="table-light">
+                <tr>
+                  <th>Item ID</th>
+                  <th>Item Name</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries
+                  .filter((e) => e.source === "Item Table")
+                  .map((entry, index) => (
+                    <tr key={index}>
+                      <td>{entry.itemId}</td>
+                      <td>{entry.itemName}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-bordered table-sm table-hover">
+            <thead className="table-light">
+              <tr>
+                <th>Check</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(Array.isArray(entries) ? entries : []).map((entry, index) => (
+                <tr key={index}>
+                  <td>{entry.Check || entry.transactionId || entry.itemId}</td>
+                  <td>{entry.Result || entry.revenue || entry.itemName || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  ))}
+
       </div>
     </div>
   );
