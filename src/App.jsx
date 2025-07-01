@@ -64,7 +64,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID (e.g., 343819188)"
+              placeholder="GA4 Property ID"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -73,7 +73,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (e.g., 30daysAgo or YYYY-MM-DD)"
+              placeholder="Start Date (YYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -82,7 +82,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (e.g., today or YYYY-MM-DD)"
+              placeholder="End Date (YYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
