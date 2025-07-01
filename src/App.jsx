@@ -64,7 +64,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID"
+              placeholder="GA4 Property ID (e.g., 343819188)"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -73,7 +73,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (YYYY-MM-DD)"
+              placeholder="Start Date (e.g., 30daysAgo or YYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -82,7 +82,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (YYYY-MM-DD)"
+              placeholder="End Date (e.g., today or YYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -114,7 +114,7 @@ function App() {
             <div key={section} className="mb-5">
               <h3 className="text-secondary">{section}</h3>
 
-              {/* Custom handling for Transaction Mapping */}
+              {/* Custom handling for transaction_mapping */}
               {section === "Transaction Mapping" ? (
                 <div className="row">
                   <div className="col-md-6">
@@ -172,7 +172,7 @@ function App() {
                   <table className="table table-bordered table-sm table-hover">
                     <thead className="table-light">
                       <tr>
-                        {/* Define headers based on section type */}
+                        {/* Headers for existing sections */}
                         {(section === "Property Details" ||
                           section === "Streams Configuration" ||
                           section === "GA4 Property Limits" ||
@@ -184,6 +184,23 @@ function App() {
                             <th>Result</th>
                           </>
                         )}
+                        {/* Headers for new Custom Dimension Details */}
+                        {section === "Custom Dimension Details" && (
+                          <>
+                            <th>Display Name</th>
+                            <th>Parameter Name</th>
+                            <th>Scope</th>
+                          </>
+                        )}
+                        {/* Headers for new Key Event Details */}
+                        {section === "Key Event Details" && (
+                          <>
+                            <th>Event Name</th>
+                            <th>Create Time</th>
+                            <th>Counting Method</th>
+                          </>
+                        )}
+                        {/* Headers for other existing sections */}
                         {(section === "Transaction Where Item Data Missing" ||
                           section === "Purchase Events Log") && (
                           <>
@@ -206,6 +223,7 @@ function App() {
                       {Array.isArray(entries) && entries.length > 0 ? (
                         entries.map((entry, index) => (
                           <tr key={index}>
+                            {/* Rendering for existing sections */}
                             {(section === "Property Details" ||
                               section === "Streams Configuration" ||
                               section === "GA4 Property Limits" ||
@@ -219,6 +237,23 @@ function App() {
                                 </td>
                               </>
                             )}
+                            {/* Rendering for new Custom Dimension Details */}
+                            {section === "Custom Dimension Details" && (
+                              <>
+                                <td>{entry.Check}</td> {/* Check holds Display Name */}
+                                <td>{entry.Result['Parameter Name']}</td>
+                                <td>{entry.Result['Scope']}</td>
+                              </>
+                            )}
+                            {/* Rendering for new Key Event Details */}
+                            {section === "Key Event Details" && (
+                              <>
+                                <td>{entry.Check}</td> {/* Check holds Event Name */}
+                                <td>{entry.Result['Create Time']}</td>
+                                <td>{entry.Result['Counting Method']}</td>
+                              </>
+                            )}
+                            {/* Rendering for other existing sections */}
                             {(section === "Transaction Where Item Data Missing" ||
                               section === "Purchase Events Log") && (
                               <>
@@ -238,7 +273,13 @@ function App() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="2">
+                          <td colSpan={
+                            section === "Custom Dimension Details" ? 3 :
+                            section === "Key Event Details" ? 3 :
+                            section === "Transaction Where Item Data Missing" || section === "Purchase Events Log" ? 4 :
+                            section === "Duplicate Transactions" ? 2 :
+                            2
+                          }>
                             {typeof entries === 'string' ? entries : "No data or all checks passed."}
                           </td>
                         </tr>
