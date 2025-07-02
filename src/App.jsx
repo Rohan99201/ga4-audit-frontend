@@ -128,7 +128,7 @@ function App() {
     <div
       className="container-fluid p-5"
       style={{
-        backgroundImage: `url('/ga4.jpg')`, // Directly reference the image from the public folder
+        // backgroundImage: `url('/ga4.jpg')`, // Directly reference the image from the public folder
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh",
