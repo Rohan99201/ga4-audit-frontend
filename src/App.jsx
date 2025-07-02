@@ -128,7 +128,8 @@ function App() {
     <div
       className="container-fluid p-5"
       style={{
-        backgroundImage: 'linear-gradient(177.6deg, rgba(20,0,113,1) 15.3%, rgba(1,0,62,1) 91.3%)',
+        // backgroundImage: `url('/ga4.jpg')`, // Directly reference the image from the public folder
+        backgroundImage: 'radial-gradient( circle 708px at 0% 3.4%,  rgba(254,216,7,1) 14.5%, rgba(249,69,28,1) 71.8% )',
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh",
