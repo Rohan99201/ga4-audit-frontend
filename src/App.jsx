@@ -195,7 +195,7 @@ function App() {
     } catch (err) {
       alert("Failed to generate PDF: " + err.message);
     } finally {
-      setLoading(false); // End loading
+      setLoading(false);
     }
   };
 
@@ -445,6 +445,8 @@ function App() {
                             entries.map((entry, index) => {
                               let resultCellContent = typeof entry.Result === 'object' ? JSON.stringify(entry.Result) : entry.Result;
                               let isWarning = false;
+                              let showTable = false;
+                              let tableData = [];
 
                               // Conditional styling for PII and Duplicate Transactions
                               if (section === "PII Check" && entry.Result && !entry.Result.includes("✅ No potential PII found")) {
@@ -452,13 +454,35 @@ function App() {
                                 resultCellContent = <span className="text-danger fw-bold">PII Found: {entry.Result}</span>;
                               } else if (section === "Transactions" && entry.Check === "Duplicate Transaction IDs" && Array.isArray(entry.Result) && entry.Result.length > 0) {
                                 isWarning = true;
-                                resultCellContent = <span className="text-danger fw-bold">Duplicate Transactions Found: {JSON.stringify(entry.Result)}</span>;
+                                resultCellContent = <span className="text-danger fw-bold">Duplicate Transactions Found</span>;
+                                showTable = true;
+                                tableData = entry.Result; // Assuming Result is already an array of {transactionId, count}
                               } else if (section === "Transactions" && entry.Check === "With Revenue but Missing Items" && entry.Result && !entry.Result.includes("✅ All revenue transactions are linked to items.")) {
                                 isWarning = true;
-                                resultCellContent = <span className="text-danger fw-bold">Missing Items: {entry.Result}</span>;
+                                resultCellContent = <span className="text-danger fw-bold">Revenue with Missing Item Data</span>;
+                                showTable = true;
+                                // Parse the string representation of the Set into an array
+                                try {
+                                  const setIdString = entry.Result.replace(/'/g, '"'); // Replace single quotes with double quotes for valid JSON
+                                  const parsedSet = JSON.parse(setIdString);
+                                  tableData = Array.from(parsedSet).map(id => ({ transactionId: id }));
+                                } catch (e) {
+                                  console.error("Error parsing 'With Revenue but Missing Items' result:", e);
+                                  tableData = [{ transactionId: "Error parsing data" }];
+                                }
                               } else if (section === "Transactions" && entry.Check === "With Items but No Revenue" && entry.Result && !entry.Result.includes("✅ All item transactions have matching revenue data.")) {
                                 isWarning = true;
-                                resultCellContent = <span className="text-danger fw-bold">No Revenue: {entry.Result}</span>;
+                                resultCellContent = <span className="text-danger fw-bold">Items with No Revenue Data</span>;
+                                showTable = true;
+                                // Parse the string representation of the Set into an array
+                                try {
+                                  const setIdString = entry.Result.replace(/'/g, '"'); // Replace single quotes with double quotes for valid JSON
+                                  const parsedSet = JSON.parse(setIdString);
+                                  tableData = Array.from(parsedSet).map(id => ({ transactionId: id }));
+                                } catch (e) {
+                                  console.error("Error parsing 'With Items but No Revenue' result:", e);
+                                  tableData = [{ transactionId: "Error parsing data" }];
+                                }
                               }
 
 
@@ -534,6 +558,77 @@ function App() {
                           )}
                         </tbody>
                       </table>
+                      {/* Conditional table for "With Revenue but Missing Items" and "With Items but No Revenue" */}
+                      {section === "Transactions" && (
+                        <>
+                          {entries.map((entry) => {
+                            if (entry.Check === "With Revenue but Missing Items" && entry.Result && !entry.Result.includes("✅ All revenue transactions are linked to items.")) {
+                              let tableData = [];
+                              try {
+                                const setIdString = entry.Result.replace(/'/g, '"');
+                                const parsedSet = JSON.parse(setIdString);
+                                tableData = Array.from(parsedSet).map(id => ({ transactionId: id }));
+                              } catch (e) {
+                                console.error("Error parsing 'With Revenue but Missing Items' result for table:", e);
+                                tableData = [{ transactionId: "Error parsing data" }];
+                              }
+                              return (
+                                <div key="missing-items-table" className="mt-3">
+                                  <h5 className="text-danger">Transactions with Revenue but Missing Item Data:</h5>
+                                  <div className="table-responsive">
+                                    <table className="table table-bordered table-sm table-hover">
+                                      <thead className="table-light">
+                                        <tr>
+                                          <th>Transaction ID</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {tableData.map((item, idx) => (
+                                          <tr key={idx}>
+                                            <td>{item.transactionId}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              );
+                            } else if (entry.Check === "With Items but No Revenue" && entry.Result && !entry.Result.includes("✅ All item transactions have matching revenue data.")) {
+                              let tableData = [];
+                              try {
+                                const setIdString = entry.Result.replace(/'/g, '"');
+                                const parsedSet = JSON.parse(setIdString);
+                                tableData = Array.from(parsedSet).map(id => ({ transactionId: id }));
+                              } catch (e) {
+                                console.error("Error parsing 'With Items but No Revenue' result for table:", e);
+                                tableData = [{ transactionId: "Error parsing data" }];
+                              }
+                              return (
+                                <div key="no-revenue-items-table" className="mt-3">
+                                  <h5 className="text-danger">Transactions with Items but No Revenue Data:</h5>
+                                  <div className="table-responsive">
+                                    <table className="table table-bordered table-sm table-hover">
+                                      <thead className="table-light">
+                                        <tr>
+                                          <th>Transaction ID</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {tableData.map((item, idx) => (
+                                          <tr key={idx}>
+                                            <td>{item.transactionId}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
