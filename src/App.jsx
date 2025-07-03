@@ -234,7 +234,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID"
+              placeholder="GA4 Property ID (e.g., 343819188)"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -243,7 +243,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (YYYY-MM-DD)"
+              placeholder="Start Date (e.g., 30daysAgo orYYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -252,7 +252,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (YYYY-MM-DD)"
+              placeholder="End Date (e.g., today orYYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -453,6 +453,12 @@ function App() {
                               } else if (section === "Transactions" && entry.Check === "Duplicate Transaction IDs" && Array.isArray(entry.Result) && entry.Result.length > 0) {
                                 isWarning = true;
                                 resultCellContent = <span className="text-danger fw-bold">Duplicate Transactions Found: {JSON.stringify(entry.Result)}</span>;
+                              } else if (section === "Transactions" && entry.Check === "With Revenue but Missing Items" && entry.Result && !entry.Result.includes("✅ All revenue transactions are linked to items.")) {
+                                isWarning = true;
+                                resultCellContent = <span className="text-danger fw-bold">Missing Items: {entry.Result}</span>;
+                              } else if (section === "Transactions" && entry.Check === "With Items but No Revenue" && entry.Result && !entry.Result.includes("✅ All item transactions have matching revenue data.")) {
+                                isWarning = true;
+                                resultCellContent = <span className="text-danger fw-bold">No Revenue: {entry.Result}</span>;
                               }
 
 
