@@ -45,10 +45,10 @@ function App() {
       summaryMessages.push("❌ Duplicate transactions found. Kindly check your e-commerce setup to prevent data discrepancies.");
     }
 
-    // Check for Purchase with no item name
+    // Check for Purchase with no item name or ID
     const itemErrorTransactions = auditData["Transaction Where Item Data Missing"];
     if (Array.isArray(itemErrorTransactions) && itemErrorTransactions.length > 0) {
-      summaryMessages.push("❌ Issues in e-commerce implementation: Purchase events detected with missing item names. Review your item tracking.");
+      summaryMessages.push("❌ Issues in e-commerce implementation: Purchase events detected with missing item names or IDs. Review your item tracking.");
     }
 
     // Check for PII
@@ -76,6 +76,23 @@ function App() {
         const customDimsUsed = limits.find(l => l.Check === "Custom Dimensions Used");
         if (customDimsUsed && parseInt(customDimsUsed.Result.split('/')[0]) >= 40) { // Warn if close to limit
             summaryMessages.push("⚠️ High number of Custom Dimensions used. Consider reviewing for optimization if approaching limits.");
+        }
+    }
+
+    // Check for transactions with revenue but no items (completely missing from item report)
+    const transactionsSection = auditData["Transactions"];
+    if (Array.isArray(transactionsSection)) {
+        const missingInItemsEntry = transactionsSection.find(e => e.Check === "With Revenue but Missing Items");
+        if (missingInItemsEntry && missingInItemsEntry.Result && !missingInItemsEntry.Result.includes("✅ All revenue transactions are linked to items.")) {
+            summaryMessages.push("❌ Transactions with revenue but no associated item data found. This indicates a potential gap in your e-commerce item tracking.");
+        }
+    }
+
+    // Check for items with no revenue
+    if (Array.isArray(transactionsSection)) {
+        const missingInTxnsEntry = transactionsSection.find(e => e.Check === "With Items but No Revenue");
+        if (missingInTxnsEntry && missingInTxnsEntry.Result && !missingInTxnsEntry.Result.includes("✅ All item transactions have matching revenue data.")) {
+            summaryMessages.push("❌ Item data found without matching transaction revenue. Ensure all purchase events are correctly sending total revenue.");
         }
     }
 
@@ -128,8 +145,6 @@ function App() {
     <div
       className="container-fluid p-5"
       style={{
-        // backgroundImage: `url('/ga4.jpg')`, // Directly reference the image from the public folder
-        // backgroundImage: 'linear-gradient( 89.2deg,  rgba(255,255,255,1) -1.3%, rgba(253,109,38,1) 281.6% )',
         backgroundImage: 'radial-gradient( circle 232px at 10% 20%,  rgba(251,238,115,0.74) 0%, rgba(241,195,87,0.74) 90% )',
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -160,7 +175,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID"
+              placeholder="GA4 Property ID (e.g., 343819188)"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -169,7 +184,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (YYYY-MM-DD)"
+              placeholder="Start Date (e.g., 30daysAgo orYYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -178,7 +193,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (YYYY-MM-DD)"
+              placeholder="End Date (e.g., today orYYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
