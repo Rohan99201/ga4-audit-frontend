@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react"; // Import useEffect
 import axios from "axios";
 // No import needed for images in the public folder
 // html2canvas and jspdf are loaded via CDN in index.html
@@ -11,6 +11,63 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const reportRef = useRef(null); // Ref for the report content to download
+
+  // Define explanations for each check
+  const checkExplanations = {
+    "Display Name": "The user-friendly name of the GA4 property.",
+    "Time Zone": "The time zone configured for the GA4 property, affecting report data.",
+    "Currency": "The currency code set for the GA4 property, used for revenue metrics.",
+    "User Data Collection Acknowledgment": "Indicates whether the required acknowledgment for user data collection terms has been successfully made for the property.",
+    "Retention Period": "The duration for which user-level and event-level data is retained in GA4 before being automatically deleted.",
+    "Custom Dimensions Used": "The number of custom dimensions currently configured out of the total allowed limit.",
+    "Custom Metrics Used": "The number of custom metrics currently configured out of the total allowed limit.",
+    "Key Events Used": "The number of key events (conversions) currently configured out of the total allowed limit.",
+    "Audiences Used": "The number of audiences currently configured out of the total allowed limit.",
+    "Event Inventory": "A list of events collected in the property and their respective counts.",
+    "Potential PII in pagePath": "Indicates if potentially personally identifiable information (PII) like emails or phone numbers are found in page paths.",
+    "Potential PII in pageLocation": "Indicates if potentially personally identifiable information (PII) like emails or phone numbers are found in page URLs.",
+    "Scan Result": "Overall result of the PII scan.",
+    "Total Unique transactionId": "The total count of distinct transaction IDs recorded.",
+    "Duplicate Transaction Count": "The number of transaction IDs that appeared more than once.",
+    "Duplicate Transaction IDs": "Lists specific transaction IDs that were recorded multiple times, indicating potential duplicate purchases.",
+    "With Revenue but Missing Items": "Checks if there are transactions with recorded revenue but no associated item-level data.",
+    "With Items but No Revenue": "Checks if there is item-level data recorded for transactions that have no overall revenue.",
+    "Missing transactionId": "Indicates if purchase events are missing a transaction ID.",
+    // Custom Dimension Details
+    "Display Name": "The user-friendly name of the custom dimension.",
+    "Parameter Name": "The technical parameter name used in event data for the custom dimension.",
+    "Scope": "The scope of the custom dimension (e.g., Event, User).",
+    // Key Event Details
+    "Event Name": "The name of the key event.",
+    "Create Time": "The date and time when the key event was created.",
+    "Counting Method": "The method used to count the key event (e.g., Once Per Event, Once Per Session)."
+  };
+
+  // Initialize tooltips after component mounts or data changes
+  useEffect(() => {
+    // Destroy existing tooltips to prevent duplicates
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => {
+      if (window.bootstrap && window.bootstrap.Tooltip.getInstance(tooltip)) {
+        window.bootstrap.Tooltip.getInstance(tooltip).dispose();
+      }
+    });
+
+    // Initialize new tooltips
+    const newTooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    newTooltips.forEach(tooltip => {
+      new window.bootstrap.Tooltip(tooltip);
+    });
+
+    // Clean up tooltips on unmount
+    return () => {
+      newTooltips.forEach(tooltip => {
+        if (window.bootstrap && window.bootstrap.Tooltip.getInstance(tooltip)) {
+          window.bootstrap.Tooltip.getInstance(tooltip).dispose();
+        }
+      });
+    };
+  }, [data]); // Re-initialize when data changes
 
   const runAudit = async () => {
     setLoading(true);
@@ -293,24 +350,73 @@ function App() {
                               section === "PII Check" ||
                               section === "Transactions") && (
                               <>
-                                <th>Check</th>
+                                <th>Check
+                                  <i
+                                    className="bi bi-info-circle-fill ms-2"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    title={checkExplanations["Check"]} // General explanation for 'Check' column
+                                  ></i>
+                                </th>
                                 <th>Result</th>
                               </>
                             )}
                             {/* Headers for new Custom Dimension Details */}
                             {section === "Custom Dimension Details" && (
                               <>
-                                <th>Display Name</th>
-                                <th>Parameter Name</th>
-                                <th>Scope</th>
+                                <th>Display Name
+                                  <i
+                                    className="bi bi-info-circle-fill ms-2"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    title={checkExplanations["Display Name"]}
+                                  ></i>
+                                </th>
+                                <th>Parameter Name
+                                  <i
+                                    className="bi bi-info-circle-fill ms-2"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    title={checkExplanations["Parameter Name"]}
+                                  ></i>
+                                </th>
+                                <th>Scope
+                                  <i
+                                    className="bi bi-info-circle-fill ms-2"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    title={checkExplanations["Scope"]}
+                                  ></i>
+                                </th>
                               </>
                             )}
                             {/* Headers for new Key Event Details */}
                             {section === "Key Event Details" && (
                               <>
-                                <th>Event Name</th>
-                                <th>Create Time</th>
-                                <th>Counting Method</th>
+                                <th>Event Name
+                                  <i
+                                    className="bi bi-info-circle-fill ms-2"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    title={checkExplanations["Event Name"]}
+                                  ></i>
+                                </th>
+                                <th>Create Time
+                                  <i
+                                    className="bi bi-info-circle-fill ms-2"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    title={checkExplanations["Create Time"]}
+                                  ></i>
+                                </th>
+                                <th>Counting Method
+                                  <i
+                                    className="bi bi-info-circle-fill ms-2"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    title={checkExplanations["Counting Method"]}
+                                  ></i>
+                                </th>
                               </>
                             )}
                             {/* Headers for other existing sections */}
@@ -357,22 +463,88 @@ function App() {
                                     section === "PII Check" ||
                                     section === "Transactions") && (
                                     <>
-                                      <td>{entry.Check}</td>
+                                      <td>
+                                        {entry.Check}
+                                        {checkExplanations[entry.Check] && (
+                                          <i
+                                            className="bi bi-info-circle-fill ms-2"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title={checkExplanations[entry.Check]}
+                                          ></i>
+                                        )}
+                                      </td>
                                       <td className={isWarning ? 'bg-danger-subtle' : ''}>{resultCellContent}</td>
                                     </>
                                   )}
                                   {(section === "Custom Dimension Details") && (
                                     <>
-                                      <td>{entry.Check}</td>
-                                      <td>{entry.Result['Parameter Name']}</td>
-                                      <td>{entry.Result['Scope']}</td>
+                                      <td>
+                                        {entry.Check}
+                                        {checkExplanations["Display Name"] && ( // Use general explanation for display name
+                                          <i
+                                            className="bi bi-info-circle-fill ms-2"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title={checkExplanations["Display Name"]}
+                                          ></i>
+                                        )}
+                                      </td>
+                                      <td>{entry.Result['Parameter Name']}
+                                        {checkExplanations["Parameter Name"] && (
+                                          <i
+                                            className="bi bi-info-circle-fill ms-2"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title={checkExplanations["Parameter Name"]}
+                                          ></i>
+                                        )}
+                                      </td>
+                                      <td>{entry.Result['Scope']}
+                                        {checkExplanations["Scope"] && (
+                                          <i
+                                            className="bi bi-info-circle-fill ms-2"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title={checkExplanations["Scope"]}
+                                          ></i>
+                                        )}
+                                      </td>
                                     </>
                                   )}
                                   {(section === "Key Event Details") && (
                                     <>
-                                      <td>{entry.Check}</td>
-                                      <td>{entry.Result['Create Time']}</td>
-                                      <td>{entry.Result['Counting Method']}</td>
+                                      <td>
+                                        {entry.Check}
+                                        {checkExplanations["Event Name"] && ( // Use general explanation for event name
+                                          <i
+                                            className="bi bi-info-circle-fill ms-2"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title={checkExplanations["Event Name"]}
+                                          ></i>
+                                        )}
+                                      </td>
+                                      <td>{entry.Result['Create Time']}
+                                        {checkExplanations["Create Time"] && (
+                                          <i
+                                            className="bi bi-info-circle-fill ms-2"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title={checkExplanations["Create Time"]}
+                                          ></i>
+                                        )}
+                                      </td>
+                                      <td>{entry.Result['Counting Method']}
+                                        {checkExplanations["Counting Method"] && (
+                                          <i
+                                            className="bi bi-info-circle-fill ms-2"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title={checkExplanations["Counting Method"]}
+                                          ></i>
+                                        )}
+                                      </td>
                                     </>
                                   )}
                                   {(section === "Transaction Where Item Data Missing" ||
