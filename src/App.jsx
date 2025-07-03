@@ -42,7 +42,7 @@ function App() {
     "Key Event Create Time": "The date and time when the key event was created.",
     "Key Event Counting Method": "The method used to count the key event (e.g., Once Per Event, Once Per Session).",
     // General 'Check' column explanation for sections where it's the primary column
-    // "Check Column": "The specific audit check being performed in this category."
+    "Check Column": "The specific audit check being performed in this category."
   };
 
   // Initialize tooltips after component mounts or data changes
@@ -234,7 +234,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID (e.g., 343819188)"
+              placeholder="GA4 Property ID"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -243,7 +243,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (e.g., 30daysAgo orYYYY-MM-DD)"
+              placeholder="Start Date (YYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -252,7 +252,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (e.g., today orYYYY-MM-DD)"
+              placeholder="End Date (YYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
