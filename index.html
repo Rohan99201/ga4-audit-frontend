@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GA4 Audit Dashboard</title>
     <!-- Bootstrap CSS -->
@@ -31,6 +30,23 @@
       /* Custom light red background for warnings */
       .bg-danger-subtle {
           background-color: #f8d7da !important; /* Bootstrap's danger-subtle color */
+      }
+      /* Custom tooltip styling for light grey */
+      .tooltip-inner {
+        background-color: #f0f0f0; /* Light grey background */
+        color: #333; /* Darker text for contrast */
+      }
+      .tooltip.bs-tooltip-top .tooltip-arrow::before {
+        border-top-color: #f0f0f0;
+      }
+      .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+        border-bottom-color: #f0f0f0;
+      }
+      .tooltip.bs-tooltip-start .tooltip-arrow::before {
+        border-left-color: #f0f0f0;
+      }
+      .tooltip.bs-tooltip-end .tooltip-arrow::before {
+        border-right-color: #f0f0f0;
       }
     </style>
   </head>

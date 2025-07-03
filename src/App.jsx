@@ -42,7 +42,7 @@ function App() {
     "Key Event Create Time": "The date and time when the key event was created.",
     "Key Event Counting Method": "The method used to count the key event (e.g., Once Per Event, Once Per Session).",
     // General 'Check' column explanation for sections where it's the primary column
-    "Check Column": "The specific audit check being performed in this category."
+    // "Check Column": "The specific audit check being performed in this category."
   };
 
   // Initialize tooltips after component mounts or data changes
