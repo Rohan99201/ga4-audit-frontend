@@ -199,7 +199,7 @@ function App() {
     <div
       className="container-fluid p-5"
       style={{
-        backgroundImage: 'linear-gradient(177.6deg, rgba(20,0,113,1) 15.3%, rgba(1,0,62,1) 91.3%)',
+        backgroundImage: 'radial-gradient( circle 232px at 10% 20%,  rgba(251,238,115,0.74) 0%, rgba(241,195,87,0.74) 90% )',
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh",
@@ -229,7 +229,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID (e.g., 343819188)"
+              placeholder="GA4 Property ID"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -238,7 +238,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (e.g., 30daysAgo orYYYY-MM-DD)"
+              placeholder="Start Date (YYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -247,7 +247,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (e.g., today orYYYY-MM-DD)"
+              placeholder="End Date (YYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
