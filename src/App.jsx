@@ -199,7 +199,7 @@ function App() {
     <div
       className="container-fluid p-5"
       style={{
-        backgroundImage: 'radial-gradient( circle 232px at 10% 20%,  rgba(251,238,115,0.74) 0%, rgba(241,195,87,0.74) 90% )',
+        backgroundImage: 'linear-gradient(177.6deg, rgba(20,0,113,1) 15.3%, rgba(1,0,62,1) 91.3%)',
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh",
@@ -229,7 +229,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID"
+              placeholder="GA4 Property ID (e.g., 343819188)"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -238,7 +238,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (YYYY-MM-DD)"
+              placeholder="Start Date (e.g., 30daysAgo orYYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -247,7 +247,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (YYYY-MM-DD)"
+              placeholder="End Date (e.g., today orYYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -548,6 +548,7 @@ function App() {
               ))}
 
               {/* New sections for detailed tables for specific transaction issues */}
+              {/* Removed the redundant h3 tags as requested */}
               {data["Revenue Only Transactions"] && data["Revenue Only Transactions"].length > 0 && (
                 <div className="mb-5">
                   <h3 className="text-danger">Transactions with Revenue but Missing Item Data</h3>
