@@ -277,278 +277,283 @@ function App() {
         {data && (
           <>
             <div ref={reportRef}> {/* This div will be captured for PDF */}
-              {Object.entries(data).map(([section, entries]) => (
-                <div key={section} className="mb-5">
-                  <h3 className="text-secondary">{section}</h3>
+              {Object.entries(data).map(([section, entries]) => {
+                // Explicitly skip rendering h3 for these sections as they have dedicated tables below
+                if (section === "Revenue Only Transactions" || section === "Items Only Transactions") {
+                  return null;
+                }
+                return (
+                  <div key={section} className="mb-5">
+                    <h3 className="text-secondary">{section}</h3>
 
-                  {/* Custom handling for transaction_mapping */}
-                  {section === "Transaction Mapping" ? (
-                    <div className="row">
-                      <div className="col-md-6">
-                        <h5>Transaction Revenue</h5>
-                        <div className="table-responsive">
-                          <table className="table table-bordered table-sm table-hover">
-                            <thead className="table-light">
-                              <tr>
-                                <th>Transaction ID</th>
-                                <th>Revenue</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {entries
-                                .filter((e) => e.source === "Revenue Table")
-                                .map((entry, index) => (
-                                  <tr key={index}>
-                                    <td>{entry.transactionId}</td>
-                                    <td>{entry.revenue}</td>
-                                  </tr>
-                                ))}
-                            </tbody>
-                          </table>
+                    {/* Custom handling for transaction_mapping */}
+                    {section === "Transaction Mapping" ? (
+                      <div className="row">
+                        <div className="col-md-6">
+                          <h5>Transaction Revenue</h5>
+                          <div className="table-responsive">
+                            <table className="table table-bordered table-sm table-hover">
+                              <thead className="table-light">
+                                <tr>
+                                  <th>Transaction ID</th>
+                                  <th>Revenue</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {entries
+                                  .filter((e) => e.source === "Revenue Table")
+                                  .map((entry, index) => (
+                                    <tr key={index}>
+                                      <td>{entry.transactionId}</td>
+                                      <td>{entry.revenue}</td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="col-md-6">
-                        <h5>Items in Purchase Events</h5>
-                        <div className="table-responsive">
-                          <table className="table table-bordered table-sm table-hover">
-                            <thead className="table-light">
-                              <tr>
-                                <th>Transaction ID</th>
-                                <th>Item ID</th>
-                                <th>Item Name</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {entries
-                                .filter((e) => e.source === "Item Table")
-                                .map((entry, index) => (
-                                  <tr key={index}>
-                                    <td>{entry.transactionId}</td>
-                                    <td>{entry.itemId}</td>
-                                    <td>{entry.itemName}</td>
-                                  </tr>
-                                ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="table-responsive">
-                      <table className="table table-bordered table-sm table-hover">
-                        <thead className="table-light">
-                          <tr>
-                            {/* Headers for existing sections */}
-                            {(section === "Property Details" ||
-                              section === "Streams Configuration" ||
-                              section === "GA4 Property Limits" ||
-                              section === "GA4 Events" ||
-                              section === "PII Check" ||
-                              section === "Transactions") && (
-                              <>
-                                <th>Check
-                                  <i
-                                    className="bi bi-info-circle-fill ms-2"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-placement="top"
-                                    title={checkExplanations["Check Column"]} /* General explanation for 'Check' column */
-                                  ></i>
-                                </th>
-                                <th>Result</th>
-                              </>
-                            )}
-                            {/* Headers for new Custom Dimension Details */}
-                            {section === "Custom Dimension Details" && (
-                              <>
-                                <th>Display Name
-                                  <i
-                                    className="bi bi-info-circle-fill ms-2"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-placement="top"
-                                    title={checkExplanations["Custom Dimension Display Name"]}
-                                  ></i>
-                                </th>
-                                <th>Parameter Name
-                                  <i
-                                    className="bi bi-info-circle-fill ms-2"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-placement="top"
-                                    title={checkExplanations["Custom Dimension Parameter Name"]}
-                                  ></i>
-                                </th>
-                                <th>Scope
-                                  <i
-                                    className="bi bi-info-circle-fill ms-2"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-placement="top"
-                                    title={checkExplanations["Custom Dimension Scope"]}
-                                  ></i>
-                                </th>
-                              </>
-                            )}
-                            {/* Headers for new Key Event Details */}
-                            {section === "Key Event Details" && (
-                              <>
-                                <th>Event Name
-                                  <i
-                                    className="bi bi-info-circle-fill ms-2"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-placement="top"
-                                    title={checkExplanations["Key Event Name"]}
-                                  ></i>
-                                </th>
-                                <th>Create Time
-                                  <i
-                                    className="bi bi-info-circle-fill ms-2"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-placement="top"
-                                    title={checkExplanations["Key Event Create Time"]}
-                                  ></i>
-                                </th>
-                                <th>Counting Method
-                                  <i
-                                    className="bi bi-info-circle-fill ms-2"
-                                    data-bs-toggle="tooltip"
-                                    data-bs-placement="top"
-                                    title={checkExplanations["Key Event Counting Method"]}
-                                  ></i>
-                                </th>
-                              </>
-                            )}
-                            {/* Headers for other existing sections */}
-                            {(section === "Transaction Where Item Data Missing" ||
-                              section === "Purchase Events Log") && (
-                              <>
-                                <th>Transaction ID</th>
-                                <th>Item ID</th>
-                                <th>Item Name</th>
-                                <th>Revenue</th>
-                              </>
-                            )}
-                            {section === "Duplicate Transactions" && (
-                              <>
-                                <th>Transaction ID</th>
-                                <th>Count</th>
-                              </>
-                            )}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {/* Render rows based on section type */}
-                          {Array.isArray(entries) && entries.length > 0 ? (
-                            entries.map((entry, index) => {
-                              let resultCellContent = typeof entry.Result === 'object' ? JSON.stringify(entry.Result) : entry.Result;
-                              let isWarning = false;
-
-                              // Conditional styling for PII and Duplicate Transactions
-                              if (section === "PII Check" && entry.Result && !entry.Result.includes("✅ No potential PII found")) {
-                                isWarning = true;
-                                resultCellContent = <span className="text-danger fw-bold">PII Found: {entry.Result}</span>;
-                              } else if (section === "Transactions" && entry.Check === "Duplicate Transaction IDs" && Array.isArray(entry.Result) && entry.Result.length > 0) {
-                                isWarning = true;
-                                resultCellContent = <span className="text-danger fw-bold">Duplicate Transactions Found</span>;
-                              }
-                              // Removed the direct display of "Revenue with Missing Item Data" and "Items with No Revenue Data" here
-                              // as they are now handled by separate tables below.
-                              else if (section === "Transactions" && entry.Check === "With Revenue but Missing Items") {
-                                // Check if there's actual data in the dedicated section for this check
-                                if (data["Revenue Only Transactions"] && data["Revenue Only Transactions"].length > 0) {
-                                  isWarning = true; // Still mark as warning if data exists in the dedicated table
-                                  resultCellContent = <span className="text-danger fw-bold">Revenue with Missing Item Data (See table below)</span>;
-                                } else {
-                                  resultCellContent = "✅ All revenue transactions are linked to items.";
-                                }
-                              } else if (section === "Transactions" && entry.Check === "With Items but No Revenue") {
-                                // Check if there's actual data in the dedicated section for this check
-                                if (data["Items Only Transactions"] && data["Items Only Transactions"].length > 0) {
-                                  isWarning = true; // Still mark as warning if data exists in the dedicated table
-                                  resultCellContent = <span className="text-danger fw-bold">Items with No Revenue Data (See table below)</span>;
-                                } else {
-                                  resultCellContent = "✅ All item transactions have matching revenue data.";
-                                }
-                              }
-
-
-                              return (
-                                <tr key={index}>
-                                  {/* Only apply tooltips to headers, not content cells */}
-                                  {(section === "Property Details" ||
-                                    section === "Streams Configuration" ||
-                                    section === "GA4 Property Limits" ||
-                                    section === "GA4 Events" ||
-                                    section === "PII Check" ||
-                                    section === "Transactions") && (
-                                    <>
-                                      <td>
-                                        {entry.Check}
-                                        {/* Tooltip for specific checks like 'Currency' or 'Retention Period' */}
-                                        {checkExplanations[entry.Check] && (
-                                          <i
-                                            className="bi bi-info-circle-fill ms-2"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-placement="top"
-                                            title={checkExplanations[entry.Check]}
-                                          ></i>
-                                        )}
-                                      </td>
-                                      <td className={isWarning ? 'bg-danger-subtle' : ''}>{resultCellContent}</td>
-                                    </>
-                                  )}
-                                  {(section === "Custom Dimension Details") && (
-                                    <>
-                                      <td>{entry.Check}</td>
-                                      <td>{entry.Result['Parameter Name']}</td>
-                                      <td>{entry.Result['Scope']}</td>
-                                    </>
-                                  )}
-                                  {(section === "Key Event Details") && (
-                                    <>
-                                      <td>{entry.Check}</td>
-                                      <td>{entry.Result['Create Time']}</td>
-                                      <td>{entry.Result['Counting Method']}</td>
-                                    </>
-                                  )}
-                                  {(section === "Transaction Where Item Data Missing" ||
-                                    section === "Purchase Events Log") && (
-                                    <>
+                        <div className="col-md-6">
+                          <h5>Items in Purchase Events</h5>
+                          <div className="table-responsive">
+                            <table className="table table-bordered table-sm table-hover">
+                              <thead className="table-light">
+                                <tr>
+                                  <th>Transaction ID</th>
+                                  <th>Item ID</th>
+                                  <th>Item Name</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {entries
+                                  .filter((e) => e.source === "Item Table")
+                                  .map((entry, index) => (
+                                    <tr key={index}>
                                       <td>{entry.transactionId}</td>
                                       <td>{entry.itemId}</td>
                                       <td>{entry.itemName}</td>
-                                      <td>{entry.revenue}</td>
-                                    </>
-                                  )}
-                                  {section === "Duplicate Transactions" && (
-                                    <>
-                                      <td>{entry.transactionId}</td>
-                                      <td>{entry.count}</td>
-                                    </>
-                                  )}
-                                </tr>
-                              );
-                            })
-                          ) : (
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="table-responsive">
+                        <table className="table table-bordered table-sm table-hover">
+                          <thead className="table-light">
                             <tr>
-                              <td colSpan={
-                                section === "Custom Dimension Details" ? 3 :
-                                section === "Key Event Details" ? 3 :
-                                section === "Transaction Where Item Data Missing" || section === "Purchase Events Log" ? 4 :
-                                section === "Duplicate Transactions" ? 2 :
-                                2
-                              }>
-                                {typeof entries === 'string' ? entries : "No data or all checks passed."}
-                              </td>
+                              {/* Headers for existing sections */}
+                              {(section === "Property Details" ||
+                                section === "Streams Configuration" ||
+                                section === "GA4 Property Limits" ||
+                                section === "GA4 Events" ||
+                                section === "PII Check" ||
+                                section === "Transactions") && (
+                                <>
+                                  <th>Check
+                                    <i
+                                      className="bi bi-info-circle-fill ms-2"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title={checkExplanations["Check Column"]} /* General explanation for 'Check' column */
+                                    ></i>
+                                  </th>
+                                  <th>Result</th>
+                                </>
+                              )}
+                              {/* Headers for new Custom Dimension Details */}
+                              {section === "Custom Dimension Details" && (
+                                <>
+                                  <th>Display Name
+                                    <i
+                                      className="bi bi-info-circle-fill ms-2"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title={checkExplanations["Custom Dimension Display Name"]}
+                                    ></i>
+                                  </th>
+                                  <th>Parameter Name
+                                    <i
+                                      className="bi bi-info-circle-fill ms-2"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title={checkExplanations["Custom Dimension Parameter Name"]}
+                                    ></i>
+                                  </th>
+                                  <th>Scope
+                                    <i
+                                      className="bi bi-info-circle-fill ms-2"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title={checkExplanations["Custom Dimension Scope"]}
+                                    ></i>
+                                  </th>
+                                </>
+                              )}
+                              {/* Headers for new Key Event Details */}
+                              {section === "Key Event Details" && (
+                                <>
+                                  <th>Event Name
+                                    <i
+                                      className="bi bi-info-circle-fill ms-2"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title={checkExplanations["Key Event Name"]}
+                                    ></i>
+                                  </th>
+                                  <th>Create Time
+                                    <i
+                                      className="bi bi-info-circle-fill ms-2"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title={checkExplanations["Key Event Create Time"]}
+                                    ></i>
+                                  </th>
+                                  <th>Counting Method
+                                    <i
+                                      className="bi bi-info-circle-fill ms-2"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="top"
+                                      title={checkExplanations["Key Event Counting Method"]}
+                                    ></i>
+                                  </th>
+                                </>
+                              )}
+                              {/* Headers for other existing sections */}
+                              {(section === "Transaction Where Item Data Missing" ||
+                                section === "Purchase Events Log") && (
+                                <>
+                                  <th>Transaction ID</th>
+                                  <th>Item ID</th>
+                                  <th>Item Name</th>
+                                  <th>Revenue</th>
+                                </>
+                              )}
+                              {section === "Duplicate Transactions" && (
+                                <>
+                                  <th>Transaction ID</th>
+                                  <th>Count</th>
+                                </>
+                              )}
                             </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              ))}
+                          </thead>
+                          <tbody>
+                            {/* Render rows based on section type */}
+                            {Array.isArray(entries) && entries.length > 0 ? (
+                              entries.map((entry, index) => {
+                                let resultCellContent = typeof entry.Result === 'object' ? JSON.stringify(entry.Result) : entry.Result;
+                                let isWarning = false;
+
+                                // Conditional styling for PII and Duplicate Transactions
+                                if (section === "PII Check" && entry.Result && !entry.Result.includes("✅ No potential PII found")) {
+                                  isWarning = true;
+                                  resultCellContent = <span className="text-danger fw-bold">PII Found: {entry.Result}</span>;
+                                } else if (section === "Transactions" && entry.Check === "Duplicate Transaction IDs" && Array.isArray(entry.Result) && entry.Result.length > 0) {
+                                  isWarning = true;
+                                  resultCellContent = <span className="text-danger fw-bold">Duplicate Transactions Found</span>;
+                                }
+                                // Removed the direct display of "Revenue with Missing Item Data" and "Items with No Revenue Data" here
+                                // as they are now handled by separate tables below.
+                                else if (section === "Transactions" && entry.Check === "With Revenue but Missing Items") {
+                                  // Check if there's actual data in the dedicated section for this check
+                                  if (data["Revenue Only Transactions"] && data["Revenue Only Transactions"].length > 0) {
+                                    isWarning = true; // Still mark as warning if data exists in the dedicated table
+                                    resultCellContent = <span className="text-danger fw-bold">Revenue with Missing Item Data (See table below)</span>;
+                                  } else {
+                                    resultCellContent = "✅ All revenue transactions are linked to items.";
+                                  }
+                                } else if (section === "Transactions" && entry.Check === "With Items but No Revenue") {
+                                  // Check if there's actual data in the dedicated section for this check
+                                  if (data["Items Only Transactions"] && data["Items Only Transactions"].length > 0) {
+                                    isWarning = true; // Still mark as warning if data exists in the dedicated table
+                                    resultCellContent = <span className="text-danger fw-bold">Items with No Revenue Data (See table below)</span>;
+                                  } else {
+                                    resultCellContent = "✅ All item transactions have matching revenue data.";
+                                  }
+                                }
+
+
+                                return (
+                                  <tr key={index}>
+                                    {/* Only apply tooltips to headers, not content cells */}
+                                    {(section === "Property Details" ||
+                                      section === "Streams Configuration" ||
+                                      section === "GA4 Property Limits" ||
+                                      section === "GA4 Events" ||
+                                      section === "PII Check" ||
+                                      section === "Transactions") && (
+                                      <>
+                                        <td>
+                                          {entry.Check}
+                                          {/* Tooltip for specific checks like 'Currency' or 'Retention Period' */}
+                                          {checkExplanations[entry.Check] && (
+                                            <i
+                                              className="bi bi-info-circle-fill ms-2"
+                                              data-bs-toggle="tooltip"
+                                              data-bs-placement="top"
+                                              title={checkExplanations[entry.Check]}
+                                            ></i>
+                                          )}
+                                        </td>
+                                        <td className={isWarning ? 'bg-danger-subtle' : ''}>{resultCellContent}</td>
+                                      </>
+                                    )}
+                                    {(section === "Custom Dimension Details") && (
+                                      <>
+                                        <td>{entry.Check}</td>
+                                        <td>{entry.Result['Parameter Name']}</td>
+                                        <td>{entry.Result['Scope']}</td>
+                                      </>
+                                    )}
+                                    {(section === "Key Event Details") && (
+                                      <>
+                                        <td>{entry.Check}</td>
+                                        <td>{entry.Result['Create Time']}</td>
+                                        <td>{entry.Result['Counting Method']}</td>
+                                      </>
+                                    )}
+                                    {(section === "Transaction Where Item Data Missing" ||
+                                      section === "Purchase Events Log") && (
+                                      <>
+                                        <td>{entry.transactionId}</td>
+                                        <td>{entry.itemId}</td>
+                                        <td>{entry.itemName}</td>
+                                        <td>{entry.revenue}</td>
+                                      </>
+                                    )}
+                                    {section === "Duplicate Transactions" && (
+                                      <>
+                                        <td>{entry.transactionId}</td>
+                                        <td>{entry.count}</td>
+                                      </>
+                                    )}
+                                  </tr>
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan={
+                                  section === "Custom Dimension Details" ? 3 :
+                                  section === "Key Event Details" ? 3 :
+                                  section === "Transaction Where Item Data Missing" || section === "Purchase Events Log" ? 4 :
+                                  section === "Duplicate Transactions" ? 2 :
+                                  2
+                                }>
+                                  {typeof entries === 'string' ? entries : "No data or all checks passed."}
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
               {/* New sections for detailed tables for specific transaction issues */}
-              {/* Removed the redundant h3 tags as requested */}
               {data["Revenue Only Transactions"] && data["Revenue Only Transactions"].length > 0 && (
                 <div className="mb-5">
                   <h3 className="text-danger">Transactions with Revenue but Missing Item Data</h3>
