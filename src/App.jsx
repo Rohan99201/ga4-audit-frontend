@@ -229,7 +229,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="GA4 Property ID (e.g., 343819188)"
+              placeholder="GA4 Property ID"
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             />
@@ -238,7 +238,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="Start Date (e.g., 30daysAgo orYYYY-MM-DD)"
+              placeholder="Start Date (YYYY-MM-DD)"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -247,7 +247,7 @@ function App() {
             <input
               type="text"
               className="form-control"
-              placeholder="End Date (e.g., today orYYYY-MM-DD)"
+              placeholder="End Date (YYYY-MM-DD)"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -448,12 +448,25 @@ function App() {
                               } else if (section === "Transactions" && entry.Check === "Duplicate Transaction IDs" && Array.isArray(entry.Result) && entry.Result.length > 0) {
                                 isWarning = true;
                                 resultCellContent = <span className="text-danger fw-bold">Duplicate Transactions Found</span>;
-                              } else if (section === "Transactions" && entry.Check === "With Revenue but Missing Items" && Array.isArray(entry.Result) && entry.Result.length > 0) {
-                                isWarning = true;
-                                resultCellContent = <span className="text-danger fw-bold">Revenue with Missing Item Data</span>;
-                              } else if (section === "Transactions" && entry.Check === "With Items but No Revenue" && Array.isArray(entry.Result) && entry.Result.length > 0) {
-                                isWarning = true;
-                                resultCellContent = <span className="text-danger fw-bold">Items with No Revenue Data</span>;
+                              }
+                              // Removed the direct display of "Revenue with Missing Item Data" and "Items with No Revenue Data" here
+                              // as they are now handled by separate tables below.
+                              else if (section === "Transactions" && entry.Check === "With Revenue but Missing Items") {
+                                // Check if there's actual data in the dedicated section for this check
+                                if (data["Revenue Only Transactions"] && data["Revenue Only Transactions"].length > 0) {
+                                  isWarning = true; // Still mark as warning if data exists in the dedicated table
+                                  resultCellContent = <span className="text-danger fw-bold">Revenue with Missing Item Data (See table below)</span>;
+                                } else {
+                                  resultCellContent = "✅ All revenue transactions are linked to items.";
+                                }
+                              } else if (section === "Transactions" && entry.Check === "With Items but No Revenue") {
+                                // Check if there's actual data in the dedicated section for this check
+                                if (data["Items Only Transactions"] && data["Items Only Transactions"].length > 0) {
+                                  isWarning = true; // Still mark as warning if data exists in the dedicated table
+                                  resultCellContent = <span className="text-danger fw-bold">Items with No Revenue Data (See table below)</span>;
+                                } else {
+                                  resultCellContent = "✅ All item transactions have matching revenue data.";
+                                }
                               }
 
 
