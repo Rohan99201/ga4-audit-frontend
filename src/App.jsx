@@ -330,7 +330,7 @@ function DropZone({ label, items, onDrop, onRemove, accepts }) {
   );
 }
 
-function DataExplorer({ selectedProp, tokenData, startDate, endDate }) {
+function DataExplorer({ selectedProp, tokenData, startDate, endDate, customDims = [] }) {
   const [selectedDims,    setSelectedDims]    = useState([]);
   const [selectedMetrics, setSelectedMetrics] = useState([]);
   const [dimSearch,       setDimSearch]       = useState("");
@@ -370,13 +370,13 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate }) {
   };
 
   const handleDropDim = (id) => {
-    const dim = GA4_DIMENSIONS.find(d=>d.id===id);
+    const dim = allDimsList.find(d=>d.id===id);
     const met = GA4_METRICS.find(m=>m.id===id);
     if (dim) addDim(dim); else if (met) addMetric(met);
   };
   const handleDropMetric = (id) => {
     const met = GA4_METRICS.find(m=>m.id===id);
-    const dim = GA4_DIMENSIONS.find(d=>d.id===id);
+    const dim = allDimsList.find(d=>d.id===id);
     if (met) addMetric(met); else if (dim) addDim(dim);
   };
 
@@ -402,11 +402,12 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate }) {
     finally { setLoadingExplore(false); }
   };
 
-  const dimGroups    = [...new Set(GA4_DIMENSIONS.map(d=>d.group))];
+  const dimGroups    = [...new Set([...GA4_DIMENSIONS, ...customDims].map(d=>d.group))];
   const metGroups    = [...new Set(GA4_METRICS.map(m=>m.group))];
-  const filteredDims = GA4_DIMENSIONS.filter(d=>d.label.toLowerCase().includes(dimSearch.toLowerCase())||d.group.toLowerCase().includes(dimSearch.toLowerCase()));
+  const allDimsList  = [...GA4_DIMENSIONS, ...customDims.filter(d=>!GA4_DIMENSIONS.find(x=>x.id===d.id))];
+  const filteredDims = allDimsList.filter(d=>d.label.toLowerCase().includes(dimSearch.toLowerCase())||d.group.toLowerCase().includes(dimSearch.toLowerCase()));
   const filteredMets = GA4_METRICS.filter(m=>m.label.toLowerCase().includes(metSearch.toLowerCase())||m.group.toLowerCase().includes(metSearch.toLowerCase()));
-  const allDimsForFilter = [...GA4_DIMENSIONS, ...selectedDims.filter(d=>!GA4_DIMENSIONS.find(x=>x.id===d.id))];
+  const allDimsForFilter = [...allDimsList, ...selectedDims.filter(d=>!allDimsList.find(x=>x.id===d.id))];
 
   if (!selectedProp) return (
     <div style={{padding:"60px 0",textAlign:"center",color:BL.lightGrey}}>
@@ -445,7 +446,7 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate }) {
           <div style={S.section}>
             <div style={{...S.sectionHeader,padding:"12px 16px"}}>
               <span style={{...S.sectionTitle,fontSize:"13px"}}>Dimensions</span>
-              <span style={S.sectionCount}>{GA4_DIMENSIONS.length}</span>
+              <span style={S.sectionCount}>{allDimsList.length}{customDims.length>0?` (${customDims.length} custom)`:""}</span>
             </div>
             <div style={{padding:"10px 12px 6px"}}>
               <input style={{...S.input,fontSize:"12px",padding:"7px 10px"}} placeholder="Search…" value={dimSearch}
@@ -604,7 +605,7 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate }) {
                   <thead>
                     <tr>
                       <th style={{...S.th,width:"40px",textAlign:"center"}}>#</th>
-                      {results.dimensions.map(d=>{const m=GA4_DIMENSIONS.find(x=>x.id===d)||selectedDims.find(x=>x.id===d);return<th key={d} style={{...S.th,color:BL.yellow}}>{m?.label||d}</th>;})}
+                      {results.dimensions.map(d=>{const m=allDimsList.find(x=>x.id===d)||selectedDims.find(x=>x.id===d);return<th key={d} style={{...S.th,color:BL.yellow}}>{m?.label||d}</th>;})}
                       {results.metrics.map(m=>{const mt=GA4_METRICS.find(x=>x.id===m);return<th key={m} style={{...S.th,color:BL.info}}>{mt?.label||m}</th>;})}
                     </tr>
                   </thead>
@@ -1294,6 +1295,9 @@ export default function App() {
   const [data, setData]                 = useState(null);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState(null);
+  const [customDims, setCustomDims]     = useState([]);  // from GA4 property
+  const [exportingXlsx, setExportingXlsx] = useState(false);
+  const [exportingPptx, setExportingPptx] = useState(false);
   const reportRef = useRef(null);
 
   useEffect(() => {
@@ -1324,9 +1328,20 @@ export default function App() {
     finally { setPropLoading(false); }
   };
 
+  const loadCustomDims = async (propId, td) => {
+    if (!propId || !td) return;
+    try {
+      const res = await axios.get(`${API}/custom-dimensions`, {
+        params: { property_id: propId },
+        headers: makeAuthHeader(td),
+      });
+      if (res.data.success) setCustomDims(res.data.dimensions);
+    } catch(e) { console.error("Failed to load custom dims", e); }
+  };
+
   const handleLogout = () => {
     clearAuth(); setUser(null); setTokenData(null);
-    setProperties([]); setData(null); setSelectedProp("");
+    setProperties([]); setData(null); setSelectedProp(""); setCustomDims([]);
   };
 
   const runAudit = async () => {
@@ -1341,6 +1356,40 @@ export default function App() {
       else setError(res.data.error||"Unknown error.");
     } catch(err) { setError("Audit failed: "+(err.response?.data?.detail||err.message)); }
     finally { setLoading(false); }
+  };
+
+  const handleExportXlsx = async () => {
+    if (!data||!tokenData) return;
+    setExportingXlsx(true);
+    try {
+      const propName = properties.find(p=>p.property_id===selectedProp)?.display_name || selectedProp;
+      const res = await axios.post(`${API}/export/xlsx`, {
+        data, property_name: propName,
+        date_range: `${startDate||"30daysAgo"} – ${endDate||"today"}`,
+      }, { headers: makeAuthHeader(tokenData), responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a"); a.href = url;
+      a.download = `GA4_Audit_${propName}.xlsx`; a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) { alert("Export failed: " + e.message); }
+    finally { setExportingXlsx(false); }
+  };
+
+  const handleExportPptx = async () => {
+    if (!data||!tokenData) return;
+    setExportingPptx(true);
+    try {
+      const propName = properties.find(p=>p.property_id===selectedProp)?.display_name || selectedProp;
+      const res = await axios.post(`${API}/export/pptx`, {
+        data, property_name: propName,
+        date_range: `${startDate||"30daysAgo"} – ${endDate||"today"}`,
+      }, { headers: makeAuthHeader(tokenData), responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a"); a.href = url;
+      a.download = `GA4_Audit_${propName}.pptx`; a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) { alert("Export failed: " + e.message); }
+    finally { setExportingPptx(false); }
   };
 
   const handleDownloadPdf = async () => {
@@ -1420,8 +1469,11 @@ export default function App() {
                       GA4 Property
                       {propLoading&&<span style={{color:BL.lightGrey,fontWeight:400,marginLeft:"8px",textTransform:"none",letterSpacing:0}}>Loading…</span>}
                     </label>
-                    <select style={S.select} value={selectedProp} onChange={e=>{setSelectedProp(e.target.value);setData(null);}}>
-                      <option value="">— Select a property —</option>
+                    <select style={S.select} value={selectedProp} onChange={e=>{
+                      setSelectedProp(e.target.value);
+                      setData(null);
+                      if (e.target.value && tokenData) loadCustomDims(e.target.value, tokenData);
+                    }}>                      <option value="">— Select a property —</option>
                       {properties.map(p=>(
                         <option key={p.property_id} value={p.property_id}>
                           {p.display_name} · {p.account_name} · {p.property_id}
@@ -1570,10 +1622,22 @@ export default function App() {
                   {data["Channel Grouping Data"]?.length>0&&<AuditSection title="Channel Grouping Data" count={data["Channel Grouping Data"].length}><AuditTable columns={["Channel Group","Sessions"]} rows={data["Channel Grouping Data"].slice(0,15).map(e=>[e["Channel Group"],e.Sessions])}/></AuditSection>}
                   {data["Unassigned Traffic Details"]?.length>0&&<AuditSection title="Unassigned Traffic Details"><CheckResultTable entries={data["Unassigned Traffic Details"]}/></AuditSection>}
                   {data["Unassigned Source/Medium Data"]?.length>0&&<AuditSection title="Unassigned Source/Medium Breakdown" count={data["Unassigned Source/Medium Data"].length}><AuditTable columns={["Channel Group","Source","Medium","Sessions"]} rows={data["Unassigned Source/Medium Data"].slice(0,15).map(e=>[e["Channel Group"],e.Source,e.Medium,e.Sessions])}/></AuditSection>}
-                  <div style={{display:"flex",justifyContent:"center",marginTop:"40px",paddingBottom:"48px"}}>
-                    <button style={{...S.btnPrimary,width:"auto",padding:"14px 40px",fontSize:"15px",opacity:loading?0.5:1}}
+                  <div style={{display:"flex",justifyContent:"center",gap:"12px",marginTop:"40px",paddingBottom:"48px",flexWrap:"wrap"}}>
+                    <button style={{...S.btnPrimary,width:"auto",padding:"13px 32px",fontSize:"14px",opacity:loading?0.5:1}}
                       onClick={handleDownloadPdf} disabled={loading}>
-                      {loading?"Generating…":"Download Report (PDF)"}
+                      {loading?"Generating…":"⬇ Download PDF"}
+                    </button>
+                    <button
+                      style={{...S.btnPrimary,width:"auto",padding:"13px 32px",fontSize:"14px",
+                        background:"00C896",opacity:exportingXlsx?0.5:1}}
+                      onClick={handleExportXlsx} disabled={exportingXlsx}>
+                      {exportingXlsx?"Exporting…":"⬇ Export to Excel"}
+                    </button>
+                    <button
+                      style={{...S.btnOutline,padding:"13px 32px",fontSize:"14px",
+                        opacity:exportingPptx?0.5:1}}
+                      onClick={handleExportPptx} disabled={exportingPptx}>
+                      {exportingPptx?"Generating…":"⬇ Export to PPTX"}
                     </button>
                   </div>
                 </div>
@@ -1582,7 +1646,7 @@ export default function App() {
               {/* SDR Tab */}
               {activeTab==="sdr"&&<SDRChecker auditData={data} selectedProp={selectedProp} tokenData={tokenData} startDate={startDate} endDate={endDate}/>}
 
-              {activeTab==="explorer"&&<DataExplorer selectedProp={selectedProp} tokenData={tokenData} startDate={startDate} endDate={endDate}/>}
+              {activeTab==="explorer"&&<DataExplorer selectedProp={selectedProp} tokenData={tokenData} startDate={startDate} endDate={endDate} customDims={customDims}/>}
 
               {/* Empty state when no audit yet */}
               {activeTab==="audit"&&!data&&!loading&&(
