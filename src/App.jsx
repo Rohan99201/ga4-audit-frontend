@@ -175,53 +175,105 @@ function AuditSection({ title, count, children }) {
 
 // ── GA4 Data Explorer ──────────────────────────────────────────────────────
 const GA4_DIMENSIONS = [
-  { id:"eventName",                   label:"Event Name",                  group:"Events" },
-  { id:"customEvent:site_type",       label:"site_type (custom)",          group:"Custom" },
-  { id:"pagePath",                    label:"Page Path",                   group:"Pages" },
-  { id:"pageTitle",                   label:"Page Title",                  group:"Pages" },
-  { id:"landingPage",                 label:"Landing Page",                group:"Pages" },
-  { id:"sessionDefaultChannelGroup",  label:"Channel Group",               group:"Traffic" },
-  { id:"sessionSource",               label:"Source",                      group:"Traffic" },
-  { id:"sessionMedium",               label:"Medium",                      group:"Traffic" },
-  { id:"sessionCampaignName",         label:"Campaign",                    group:"Traffic" },
-  { id:"deviceCategory",              label:"Device Category",             group:"Device" },
-  { id:"operatingSystem",             label:"Operating System",            group:"Device" },
-  { id:"browser",                     label:"Browser",                     group:"Device" },
-  { id:"country",                     label:"Country",                     group:"Geo" },
-  { id:"city",                        label:"City",                        group:"Geo" },
-  { id:"date",                        label:"Date",                        group:"Time" },
-  { id:"week",                        label:"Week",                        group:"Time" },
-  { id:"month",                       label:"Month",                       group:"Time" },
-  { id:"dayOfWeek",                   label:"Day of Week",                 group:"Time" },
-  { id:"hour",                        label:"Hour",                        group:"Time" },
-  { id:"itemName",                    label:"Item Name",                   group:"Ecommerce" },
-  { id:"itemCategory",                label:"Item Category",               group:"Ecommerce" },
-  { id:"transactionId",               label:"Transaction ID",              group:"Ecommerce" },
-  { id:"percent_scrolled",            label:"Percent Scrolled",            group:"Engagement" },
-  { id:"contentGroup",                label:"Content Group",               group:"Pages" },
-  { id:"platform",                    label:"Platform",                    group:"Device" },
+  // Events
+  { id:"eventName",                        label:"Event Name",              group:"Events" },
+  // Pages
+  { id:"pagePath",                         label:"Page Path",               group:"Pages" },
+  { id:"pageTitle",                        label:"Page Title",              group:"Pages" },
+  { id:"pageLocation",                     label:"Page Location (URL)",     group:"Pages" },
+  { id:"landingPage",                      label:"Landing Page",            group:"Pages" },
+  { id:"landingPagePlusQueryString",       label:"Landing Page + Query",    group:"Pages" },
+  { id:"contentGroup",                     label:"Content Group",           group:"Pages" },
+  // Traffic
+  { id:"sessionDefaultChannelGroup",       label:"Channel Group",           group:"Traffic" },
+  { id:"sessionSource",                    label:"Source",                  group:"Traffic" },
+  { id:"sessionMedium",                    label:"Medium",                  group:"Traffic" },
+  { id:"sessionCampaignName",              label:"Campaign",                group:"Traffic" },
+  { id:"sessionSourceMedium",             label:"Source / Medium",          group:"Traffic" },
+  { id:"firstUserDefaultChannelGroup",    label:"First User Channel",       group:"Traffic" },
+  { id:"firstUserSource",                 label:"First User Source",        group:"Traffic" },
+  { id:"firstUserMedium",                 label:"First User Medium",        group:"Traffic" },
+  { id:"firstUserCampaignName",           label:"First User Campaign",      group:"Traffic" },
+  // Device
+  { id:"deviceCategory",                  label:"Device Category",          group:"Device" },
+  { id:"operatingSystem",                 label:"Operating System",         group:"Device" },
+  { id:"operatingSystemVersion",          label:"OS Version",               group:"Device" },
+  { id:"browser",                         label:"Browser",                  group:"Device" },
+  { id:"browserVersion",                  label:"Browser Version",          group:"Device" },
+  { id:"platform",                        label:"Platform",                 group:"Device" },
+  { id:"mobileDeviceBranding",            label:"Device Brand",             group:"Device" },
+  { id:"mobileDeviceModel",               label:"Device Model",             group:"Device" },
+  // Geo
+  { id:"country",                         label:"Country",                  group:"Geo" },
+  { id:"countryId",                       label:"Country ID",               group:"Geo" },
+  { id:"city",                            label:"City",                     group:"Geo" },
+  { id:"region",                          label:"Region",                   group:"Geo" },
+  { id:"continent",                       label:"Continent",                group:"Geo" },
+  { id:"language",                        label:"Language",                 group:"Geo" },
+  // Time
+  { id:"date",                            label:"Date",                     group:"Time" },
+  { id:"week",                            label:"Week",                     group:"Time" },
+  { id:"month",                           label:"Month",                    group:"Time" },
+  { id:"year",                            label:"Year",                     group:"Time" },
+  { id:"dayOfWeek",                       label:"Day of Week",              group:"Time" },
+  { id:"hour",                            label:"Hour",                     group:"Time" },
+  { id:"nthDay",                          label:"Nth Day",                  group:"Time" },
+  // Ecommerce
+  { id:"itemName",                        label:"Item Name",                group:"Ecommerce" },
+  { id:"itemId",                          label:"Item ID",                  group:"Ecommerce" },
+  { id:"itemCategory",                    label:"Item Category",            group:"Ecommerce" },
+  { id:"itemCategory2",                   label:"Item Category 2",          group:"Ecommerce" },
+  { id:"itemBrand",                       label:"Item Brand",               group:"Ecommerce" },
+  { id:"itemVariant",                     label:"Item Variant",             group:"Ecommerce" },
+  { id:"itemListName",                    label:"Item List Name",           group:"Ecommerce" },
+  { id:"transactionId",                   label:"Transaction ID",           group:"Ecommerce" },
+  { id:"shippingTier",                    label:"Shipping Tier",            group:"Ecommerce" },
+  { id:"paymentType",                     label:"Payment Type",             group:"Ecommerce" },
+  // User
+  { id:"newVsReturning",                  label:"New vs Returning",         group:"Users" },
+  { id:"userAgeBracket",                  label:"Age Bracket",              group:"Users" },
+  { id:"userGender",                      label:"Gender",                   group:"Users" },
+  // Engagement
+  { id:"customEvent:percent_scrolled",    label:"Percent Scrolled (custom)", group:"Custom" },
+  // Audience
+  { id:"audienceName",                    label:"Audience Name",            group:"Audience" },
 ];
 
+// Custom dimension input — user can type their own customEvent: or customUser: dim
+const CUSTOM_DIM_PREFIX = "customEvent:";
+
 const GA4_METRICS = [
-  { id:"eventCount",          label:"Event Count",        group:"Events" },
-  { id:"totalUsers",          label:"Total Users",        group:"Users" },
-  { id:"activeUsers",         label:"Active Users",       group:"Users" },
-  { id:"newUsers",            label:"New Users",          group:"Users" },
-  { id:"sessions",            label:"Sessions",           group:"Sessions" },
-  { id:"sessionsPerUser",     label:"Sessions / User",    group:"Sessions" },
-  { id:"averageSessionDuration", label:"Avg Session Duration", group:"Sessions" },
-  { id:"bounceRate",          label:"Bounce Rate",        group:"Sessions" },
-  { id:"engagementRate",      label:"Engagement Rate",    group:"Engagement" },
-  { id:"engagedSessions",     label:"Engaged Sessions",   group:"Engagement" },
-  { id:"userEngagementDuration", label:"Engagement Duration", group:"Engagement" },
-  { id:"screenPageViews",     label:"Page Views",         group:"Pages" },
-  { id:"screenPageViewsPerSession", label:"Pages / Session", group:"Pages" },
-  { id:"purchaseRevenue",     label:"Revenue",            group:"Ecommerce" },
-  { id:"transactions",        label:"Transactions",       group:"Ecommerce" },
-  { id:"ecommercePurchases",  label:"Purchases",          group:"Ecommerce" },
-  { id:"itemRevenue",         label:"Item Revenue",       group:"Ecommerce" },
-  { id:"itemsPurchased",      label:"Items Purchased",    group:"Ecommerce" },
-  { id:"conversions",         label:"Conversions",        group:"Conversions" },
+  { id:"eventCount",                label:"Event Count",           group:"Events" },
+  { id:"eventCountPerUser",         label:"Events / User",         group:"Events" },
+  { id:"eventsPerSession",          label:"Events / Session",      group:"Events" },
+  { id:"totalUsers",                label:"Total Users",           group:"Users" },
+  { id:"activeUsers",               label:"Active Users",          group:"Users" },
+  { id:"newUsers",                  label:"New Users",             group:"Users" },
+  { id:"returningUsers",            label:"Returning Users",       group:"Users" },
+  { id:"sessions",                  label:"Sessions",              group:"Sessions" },
+  { id:"sessionsPerUser",           label:"Sessions / User",       group:"Sessions" },
+  { id:"averageSessionDuration",    label:"Avg Session Duration",  group:"Sessions" },
+  { id:"bounceRate",                label:"Bounce Rate",           group:"Sessions" },
+  { id:"engagementRate",            label:"Engagement Rate",       group:"Engagement" },
+  { id:"engagedSessions",           label:"Engaged Sessions",      group:"Engagement" },
+  { id:"userEngagementDuration",    label:"Engagement Duration",   group:"Engagement" },
+  { id:"scrolledUsers",             label:"Scrolled Users",        group:"Engagement" },
+  { id:"screenPageViews",           label:"Page Views",            group:"Pages" },
+  { id:"screenPageViewsPerSession", label:"Pages / Session",       group:"Pages" },
+  { id:"screenPageViewsPerUser",    label:"Pages / User",          group:"Pages" },
+  { id:"purchaseRevenue",           label:"Revenue",               group:"Ecommerce" },
+  { id:"purchaseRevenuePerUser",    label:"Revenue / User",        group:"Ecommerce" },
+  { id:"transactions",              label:"Transactions",          group:"Ecommerce" },
+  { id:"transactionsPerPurchaser",  label:"Txns / Purchaser",      group:"Ecommerce" },
+  { id:"ecommercePurchases",        label:"Purchases",             group:"Ecommerce" },
+  { id:"itemRevenue",               label:"Item Revenue",          group:"Ecommerce" },
+  { id:"itemsPurchased",            label:"Items Purchased",       group:"Ecommerce" },
+  { id:"addToCarts",                label:"Add to Carts",          group:"Ecommerce" },
+  { id:"checkouts",                 label:"Checkouts",             group:"Ecommerce" },
+  { id:"cartToViewRate",            label:"Cart-to-View Rate",     group:"Ecommerce" },
+  { id:"purchaseToViewRate",        label:"Purchase-to-View Rate", group:"Ecommerce" },
+  { id:"conversions",               label:"Conversions",           group:"Conversions" },
+  { id:"totalRevenue",              label:"Total Revenue",         group:"Conversions" },
 ];
 
 function DragChip({ item, onRemove, draggable, onDragStart }) {
@@ -288,235 +340,248 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate }) {
   const [results,         setResults]         = useState(null);
   const [loadingExplore,  setLoadingExplore]  = useState(false);
   const [exploreError,    setExploreError]    = useState(null);
-  const [dragItem,        setDragItem]        = useState(null);
+  // Custom dim input
+  const [customDimInput,  setCustomDimInput]  = useState("");
+  // Filters: [{dimension, matchType, value}]
+  const [filters,         setFilters]         = useState([]);
+  const [filterDim,       setFilterDim]       = useState("");
+  const [filterType,      setFilterType]      = useState("EXACT");
+  const [filterValue,     setFilterValue]     = useState("");
 
-  const addDim = (dim) => {
-    if (!selectedDims.find(d=>d.id===dim.id)) setSelectedDims(p=>[...p,dim]);
-  };
-  const addMetric = (met) => {
-    if (!selectedMetrics.find(m=>m.id===met.id)) setSelectedMetrics(p=>[...p,met]);
-  };
+  const MATCH_TYPES = [
+    { id:"EXACT",      label:"exactly equals" },
+    { id:"BEGINS_WITH",label:"begins with" },
+    { id:"ENDS_WITH",  label:"ends with" },
+    { id:"CONTAINS",   label:"contains" },
+    { id:"REGEXP",     label:"matches regex" },
+  ];
+
+  const addDim = (dim) => { if (!selectedDims.find(d=>d.id===dim.id)) setSelectedDims(p=>[...p,dim]); };
+  const addMetric = (met) => { if (!selectedMetrics.find(m=>m.id===met.id)) setSelectedMetrics(p=>[...p,met]); };
   const removeDim    = (id) => setSelectedDims(p=>p.filter(d=>d.id!==id));
   const removeMetric = (id) => setSelectedMetrics(p=>p.filter(m=>m.id!==id));
+
+  const addCustomDim = () => {
+    const raw = customDimInput.trim(); if (!raw) return;
+    const id = raw.startsWith("customEvent:")||raw.startsWith("customUser:")||raw.startsWith("customItem:") ? raw : `customEvent:${raw}`;
+    const label = raw.includes(":") ? raw.split(":")[1] : raw;
+    addDim({ id, label:`${label} (custom)`, group:"Custom" });
+    setCustomDimInput("");
+  };
 
   const handleDropDim = (id) => {
     const dim = GA4_DIMENSIONS.find(d=>d.id===id);
     const met = GA4_METRICS.find(m=>m.id===id);
-    if (dim) addDim(dim);
-    else if (met) addMetric(met); // allow dropping metric into dims zone → goes to metrics
+    if (dim) addDim(dim); else if (met) addMetric(met);
   };
   const handleDropMetric = (id) => {
     const met = GA4_METRICS.find(m=>m.id===id);
     const dim = GA4_DIMENSIONS.find(d=>d.id===id);
-    if (met) addMetric(met);
-    else if (dim) addDim(dim);
+    if (met) addMetric(met); else if (dim) addDim(dim);
   };
 
+  const addFilter = () => {
+    if (!filterDim||!filterValue.trim()) return;
+    setFilters(f=>[...f,{dimension:filterDim,matchType:filterType,value:filterValue.trim()}]);
+    setFilterDim(""); setFilterValue("");
+  };
+  const removeFilter = (idx) => setFilters(f=>f.filter((_,i)=>i!==idx));
+
   const runExplore = async () => {
-    if (!selectedProp||!tokenData) return;
-    if (selectedDims.length===0&&selectedMetrics.length===0) return;
+    if (!selectedProp||!tokenData||(selectedDims.length===0&&selectedMetrics.length===0)) return;
     setLoadingExplore(true); setExploreError(null); setResults(null);
     try {
       const res = await axios.post(
         `${API}/explore?property_id=${selectedProp}&start_date=${startDate||"30daysAgo"}&end_date=${endDate||"today"}`,
-        {
-          dimensions:   selectedDims.map(d=>d.id),
-          metrics:      selectedMetrics.map(m=>m.id),
-          limit:        rowLimit,
-          order_by_metric: orderBy || (selectedMetrics[0]?.id ?? ""),
-        },
+        { dimensions:selectedDims.map(d=>d.id), metrics:selectedMetrics.map(m=>m.id),
+          limit:rowLimit, order_by_metric:orderBy||(selectedMetrics[0]?.id??""), filters },
         { headers:{ Authorization:`Bearer ${btoa(JSON.stringify(tokenData))}` } }
       );
-      if (res.data.success) setResults(res.data);
-      else setExploreError(res.data.error||"Query failed.");
-    } catch(e) {
-      setExploreError("Request failed: "+(e.response?.data?.detail||e.message));
-    } finally { setLoadingExplore(false); }
+      if (res.data.success) setResults(res.data); else setExploreError(res.data.error||"Query failed.");
+    } catch(e) { setExploreError("Request failed: "+(e.response?.data?.detail||e.message)); }
+    finally { setLoadingExplore(false); }
   };
 
-  const dimGroups   = [...new Set(GA4_DIMENSIONS.map(d=>d.group))];
-  const metGroups   = [...new Set(GA4_METRICS.map(m=>m.group))];
+  const dimGroups    = [...new Set(GA4_DIMENSIONS.map(d=>d.group))];
+  const metGroups    = [...new Set(GA4_METRICS.map(m=>m.group))];
   const filteredDims = GA4_DIMENSIONS.filter(d=>d.label.toLowerCase().includes(dimSearch.toLowerCase())||d.group.toLowerCase().includes(dimSearch.toLowerCase()));
   const filteredMets = GA4_METRICS.filter(m=>m.label.toLowerCase().includes(metSearch.toLowerCase())||m.group.toLowerCase().includes(metSearch.toLowerCase()));
+  const allDimsForFilter = [...GA4_DIMENSIONS, ...selectedDims.filter(d=>!GA4_DIMENSIONS.find(x=>x.id===d.id))];
 
-  const allCols = [...(results?.dimensions||[]), ...(results?.metrics||[])];
-
-  if (!selectedProp) {
-    return (
-      <div style={{padding:"60px 0",textAlign:"center",color:BL.lightGrey}}>
-        <div style={{fontSize:"32px",marginBottom:"12px"}}>📊</div>
-        <div style={{fontSize:"15px",fontWeight:600,marginBottom:"8px",color:BL.white}}>Select a property first</div>
-        <div style={{fontSize:"13px"}}>Choose a GA4 property from the dropdown above to use the Data Explorer.</div>
-      </div>
-    );
-  }
+  if (!selectedProp) return (
+    <div style={{padding:"60px 0",textAlign:"center",color:BL.lightGrey}}>
+      <div style={{fontSize:"32px",marginBottom:"12px"}}>📊</div>
+      <div style={{fontSize:"15px",fontWeight:600,marginBottom:"8px",color:BL.white}}>Select a property first</div>
+      <div style={{fontSize:"13px"}}>Choose a GA4 property from the dropdown above to use the Data Explorer.</div>
+    </div>
+  );
 
   return (
     <div>
       <div style={{marginBottom:"24px"}}>
         <div style={{fontSize:"22px",fontWeight:800,letterSpacing:"-0.6px",marginBottom:"4px"}}>Data Explorer</div>
-        <div style={{color:BL.lightGrey,fontSize:"13px"}}>
-          Drag dimensions and metrics to build a custom GA4 report — like GA4 Explore but live in the audit tool.
-        </div>
+        <div style={{color:BL.lightGrey,fontSize:"13px"}}>Build a custom GA4 report — click or drag fields, add filters, run the query.</div>
       </div>
-
       <div style={{display:"grid",gridTemplateColumns:"280px 1fr",gap:"20px",alignItems:"start"}}>
 
-        {/* ── Left panel: available fields ── */}
+        {/* Left panel */}
         <div style={{display:"flex",flexDirection:"column",gap:"16px",position:"sticky",top:"80px"}}>
+          {/* Custom dim */}
+          <div style={S.section}>
+            <div style={{...S.sectionHeader,padding:"12px 16px"}}><span style={{...S.sectionTitle,fontSize:"13px"}}>Add Custom Dimension</span></div>
+            <div style={{padding:"12px"}}>
+              <div style={{fontSize:"11px",color:BL.lightGrey,marginBottom:"8px",lineHeight:"1.5"}}>Enter a param name — auto-prefixed as <code>customEvent:</code> unless you specify <code>customUser:</code></div>
+              <div style={{display:"flex",gap:"6px"}}>
+                <input style={{...S.input,fontSize:"12px",padding:"7px 10px",flex:1}} placeholder="e.g. site_type"
+                  value={customDimInput} onChange={e=>setCustomDimInput(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&addCustomDim()}
+                  onFocus={e=>e.target.style.borderColor=BL.yellow} onBlur={e=>e.target.style.borderColor=BL.border}/>
+                <button onClick={addCustomDim} style={{...S.btnPrimary,width:"auto",padding:"7px 12px",fontSize:"12px"}}>Add</button>
+              </div>
+            </div>
+          </div>
 
-          {/* Dimensions */}
-          <div style={{...S.section}}>
+          {/* Dimensions list */}
+          <div style={S.section}>
             <div style={{...S.sectionHeader,padding:"12px 16px"}}>
               <span style={{...S.sectionTitle,fontSize:"13px"}}>Dimensions</span>
               <span style={S.sectionCount}>{GA4_DIMENSIONS.length}</span>
             </div>
             <div style={{padding:"10px 12px 6px"}}>
-              <input style={{...S.input,fontSize:"12px",padding:"7px 10px"}}
-                placeholder="Search dimensions…" value={dimSearch}
+              <input style={{...S.input,fontSize:"12px",padding:"7px 10px"}} placeholder="Search…" value={dimSearch}
                 onChange={e=>setDimSearch(e.target.value)}
-                onFocus={e=>e.target.style.borderColor=BL.yellow}
-                onBlur={e=>e.target.style.borderColor=BL.border}/>
+                onFocus={e=>e.target.style.borderColor=BL.yellow} onBlur={e=>e.target.style.borderColor=BL.border}/>
             </div>
-            <div style={{maxHeight:"300px",overflowY:"auto",padding:"4px 12px 12px"}}>
-              {dimGroups.map(grp => {
-                const items = filteredDims.filter(d=>d.group===grp);
-                if (!items.length) return null;
-                return (
-                  <div key={grp} style={{marginBottom:"10px"}}>
-                    <div style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",color:BL.midGrey,marginBottom:"5px"}}>{grp}</div>
-                    {items.map(dim => (
-                      <div key={dim.id}
-                        draggable
-                        onDragStart={e=>{e.dataTransfer.setData("text/plain",dim.id);setDragItem(dim);}}
-                        onClick={()=>addDim(dim)}
-                        style={{
-                          padding:"5px 8px", borderRadius:"5px", fontSize:"12px", cursor:"grab",
-                          color:selectedDims.find(d=>d.id===dim.id)?BL.yellow:BL.lightGrey,
-                          background:selectedDims.find(d=>d.id===dim.id)?"rgba(255,212,38,0.08)":"transparent",
-                          marginBottom:"2px", display:"flex", justifyContent:"space-between", alignItems:"center",
-                          userSelect:"none",
-                        }}
-                        onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.05)"}
-                        onMouseLeave={e=>e.currentTarget.style.background=selectedDims.find(d=>d.id===dim.id)?"rgba(255,212,38,0.08)":"transparent"}
-                      >
-                        <span>⠿ {dim.label}</span>
-                        {selectedDims.find(d=>d.id===dim.id)&&<span style={{color:BL.yellow,fontSize:"10px"}}>✓</span>}
-                      </div>
-                    ))}
-                  </div>
-                );
+            <div style={{maxHeight:"280px",overflowY:"auto",padding:"4px 12px 12px"}}>
+              {dimGroups.map(grp=>{
+                const items=filteredDims.filter(d=>d.group===grp); if(!items.length) return null;
+                return (<div key={grp} style={{marginBottom:"10px"}}>
+                  <div style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",color:BL.midGrey,marginBottom:"5px"}}>{grp}</div>
+                  {items.map(dim=>{const sel=!!selectedDims.find(d=>d.id===dim.id);return(
+                    <div key={dim.id} draggable onDragStart={e=>e.dataTransfer.setData("text/plain",dim.id)} onClick={()=>addDim(dim)}
+                      style={{padding:"5px 8px",borderRadius:"5px",fontSize:"12px",cursor:"pointer",color:sel?BL.yellow:BL.lightGrey,background:sel?"rgba(255,212,38,0.08)":"transparent",marginBottom:"2px",display:"flex",justifyContent:"space-between",alignItems:"center",userSelect:"none"}}
+                      onMouseEnter={e=>!sel&&(e.currentTarget.style.background="rgba(255,255,255,0.05)")}
+                      onMouseLeave={e=>e.currentTarget.style.background=sel?"rgba(255,212,38,0.08)":"transparent"}>
+                      <span>⠿ {dim.label}</span>{sel&&<span style={{color:BL.yellow,fontSize:"10px"}}>✓</span>}
+                    </div>
+                  );})}
+                </div>);
               })}
             </div>
           </div>
 
-          {/* Metrics */}
+          {/* Metrics list */}
           <div style={S.section}>
             <div style={{...S.sectionHeader,padding:"12px 16px"}}>
               <span style={{...S.sectionTitle,fontSize:"13px"}}>Metrics</span>
               <span style={S.sectionCount}>{GA4_METRICS.length}</span>
             </div>
             <div style={{padding:"10px 12px 6px"}}>
-              <input style={{...S.input,fontSize:"12px",padding:"7px 10px"}}
-                placeholder="Search metrics…" value={metSearch}
+              <input style={{...S.input,fontSize:"12px",padding:"7px 10px"}} placeholder="Search…" value={metSearch}
                 onChange={e=>setMetSearch(e.target.value)}
-                onFocus={e=>e.target.style.borderColor=BL.yellow}
-                onBlur={e=>e.target.style.borderColor=BL.border}/>
+                onFocus={e=>e.target.style.borderColor=BL.yellow} onBlur={e=>e.target.style.borderColor=BL.border}/>
             </div>
-            <div style={{maxHeight:"300px",overflowY:"auto",padding:"4px 12px 12px"}}>
-              {metGroups.map(grp => {
-                const items = filteredMets.filter(m=>m.group===grp);
-                if (!items.length) return null;
-                return (
-                  <div key={grp} style={{marginBottom:"10px"}}>
-                    <div style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",color:BL.midGrey,marginBottom:"5px"}}>{grp}</div>
-                    {items.map(met => (
-                      <div key={met.id}
-                        draggable
-                        onDragStart={e=>{e.dataTransfer.setData("text/plain",met.id);setDragItem(met);}}
-                        onClick={()=>addMetric(met)}
-                        style={{
-                          padding:"5px 8px", borderRadius:"5px", fontSize:"12px", cursor:"grab",
-                          color:selectedMetrics.find(m=>m.id===met.id)?BL.info:BL.lightGrey,
-                          background:selectedMetrics.find(m=>m.id===met.id)?"rgba(74,158,255,0.08)":"transparent",
-                          marginBottom:"2px", display:"flex", justifyContent:"space-between", alignItems:"center",
-                          userSelect:"none",
-                        }}
-                        onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.05)"}
-                        onMouseLeave={e=>e.currentTarget.style.background=selectedMetrics.find(m=>m.id===met.id)?"rgba(74,158,255,0.08)":"transparent"}
-                      >
-                        <span>⠿ {met.label}</span>
-                        {selectedMetrics.find(m=>m.id===met.id)&&<span style={{color:BL.info,fontSize:"10px"}}>✓</span>}
-                      </div>
-                    ))}
-                  </div>
-                );
+            <div style={{maxHeight:"280px",overflowY:"auto",padding:"4px 12px 12px"}}>
+              {metGroups.map(grp=>{
+                const items=filteredMets.filter(m=>m.group===grp); if(!items.length) return null;
+                return (<div key={grp} style={{marginBottom:"10px"}}>
+                  <div style={{fontSize:"10px",fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",color:BL.midGrey,marginBottom:"5px"}}>{grp}</div>
+                  {items.map(met=>{const sel=!!selectedMetrics.find(m=>m.id===met.id);return(
+                    <div key={met.id} draggable onDragStart={e=>e.dataTransfer.setData("text/plain",met.id)} onClick={()=>addMetric(met)}
+                      style={{padding:"5px 8px",borderRadius:"5px",fontSize:"12px",cursor:"pointer",color:sel?BL.info:BL.lightGrey,background:sel?"rgba(74,158,255,0.08)":"transparent",marginBottom:"2px",display:"flex",justifyContent:"space-between",alignItems:"center",userSelect:"none"}}
+                      onMouseEnter={e=>!sel&&(e.currentTarget.style.background="rgba(255,255,255,0.05)")}
+                      onMouseLeave={e=>e.currentTarget.style.background=sel?"rgba(74,158,255,0.08)":"transparent"}>
+                      <span>⠿ {met.label}</span>{sel&&<span style={{color:BL.info,fontSize:"10px"}}>✓</span>}
+                    </div>
+                  );})}
+                </div>);
               })}
             </div>
           </div>
         </div>
 
-        {/* ── Right panel: drop zones + results ── */}
+        {/* Right panel */}
         <div style={{display:"flex",flexDirection:"column",gap:"16px"}}>
-
-          {/* Drop zones */}
-          <div style={{...S.section,overflow:"visible"}}>
+          <div style={S.section}>
             <div style={{padding:"16px 20px 20px"}}>
+              {/* Drop zones */}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px",marginBottom:"16px"}}>
-                <DropZone
-                  label="Dimensions"
-                  items={selectedDims}
-                  onDrop={handleDropDim}
-                  onRemove={removeDim}
-                  accepts="dimensions"
-                />
-                <DropZone
-                  label="Metrics"
-                  items={selectedMetrics}
-                  onDrop={handleDropMetric}
-                  onRemove={removeMetric}
-                  accepts="metrics"
-                />
+                <DropZone label="Dimensions" items={selectedDims} onDrop={handleDropDim} onRemove={removeDim} accepts="dimensions"/>
+                <DropZone label="Metrics" items={selectedMetrics} onDrop={handleDropMetric} onRemove={removeMetric} accepts="metrics"/>
               </div>
 
-              {/* Controls */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr auto",gap:"12px",alignItems:"end"}}>
+              {/* Filters */}
+              <div style={{borderTop:`1px solid ${BL.border}`,paddingTop:"16px",marginBottom:"16px"}}>
+                <div style={{fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",color:BL.lightGrey,marginBottom:"10px"}}>Dimension Filters</div>
+                {filters.length>0&&(
+                  <div style={{marginBottom:"10px",display:"flex",flexWrap:"wrap",gap:"6px"}}>
+                    {filters.map((f,i)=>{
+                      const dimMeta=allDimsForFilter.find(d=>d.id===f.dimension);
+                      return(
+                        <div key={i} style={{display:"inline-flex",alignItems:"center",gap:"6px",padding:"4px 10px",borderRadius:"6px",background:"rgba(74,158,255,0.1)",border:`1px solid rgba(74,158,255,0.3)`,fontSize:"12px",color:BL.info}}>
+                          <span style={{fontWeight:700}}>{dimMeta?.label||f.dimension}</span>
+                          <span style={{color:BL.lightGrey}}>{MATCH_TYPES.find(t=>t.id===f.matchType)?.label}</span>
+                          <span style={{color:BL.white,fontFamily:"monospace"}}>"{f.value}"</span>
+                          <span onClick={()=>removeFilter(i)} style={{cursor:"pointer",color:"rgba(74,158,255,0.6)",fontSize:"14px"}}>×</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr auto",gap:"8px",alignItems:"end"}}>
+                  <div>
+                    <label style={{...S.inputLabel,marginBottom:"5px"}}>Dimension</label>
+                    <select style={{...S.select,fontSize:"12px",padding:"7px 30px 7px 10px"}} value={filterDim} onChange={e=>setFilterDim(e.target.value)}>
+                      <option value="">Select…</option>
+                      {allDimsForFilter.map(d=><option key={d.id} value={d.id}>{d.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{...S.inputLabel,marginBottom:"5px"}}>Match type</label>
+                    <select style={{...S.select,fontSize:"12px",padding:"7px 30px 7px 10px"}} value={filterType} onChange={e=>setFilterType(e.target.value)}>
+                      {MATCH_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{...S.inputLabel,marginBottom:"5px"}}>Value</label>
+                    <input style={{...S.input,fontSize:"12px",padding:"7px 10px"}} placeholder="e.g. scroll, Microsite"
+                      value={filterValue} onChange={e=>setFilterValue(e.target.value)}
+                      onKeyDown={e=>e.key==="Enter"&&addFilter()}
+                      onFocus={e=>e.target.style.borderColor=BL.yellow} onBlur={e=>e.target.style.borderColor=BL.border}/>
+                  </div>
+                  <div style={{paddingTop:"16px"}}>
+                    <button onClick={addFilter} style={{...S.btnOutline,padding:"8px 14px",fontSize:"12px",whiteSpace:"nowrap"}}>+ Add Filter</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Run controls */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr auto",gap:"12px",alignItems:"end",borderTop:`1px solid ${BL.border}`,paddingTop:"16px"}}>
                 <div>
                   <label style={S.inputLabel}>Sort by Metric</label>
                   <select style={S.select} value={orderBy} onChange={e=>setOrderBy(e.target.value)}>
                     <option value="">Default (first metric)</option>
-                    {selectedMetrics.map(m=>(
-                      <option key={m.id} value={m.id}>{m.label}</option>
-                    ))}
+                    {selectedMetrics.map(m=><option key={m.id} value={m.id}>{m.label}</option>)}
                   </select>
                 </div>
                 <div>
                   <label style={S.inputLabel}>Row Limit</label>
                   <select style={S.select} value={rowLimit} onChange={e=>setRowLimit(Number(e.target.value))}>
-                    {[25,50,100,250,500,1000,5000].map(n=>(
-                      <option key={n} value={n}>{n} rows</option>
-                    ))}
+                    {[25,50,100,250,500,1000,5000].map(n=><option key={n} value={n}>{n} rows</option>)}
                   </select>
                 </div>
                 <div>
-                  <button
-                    style={{...S.btnPrimary,width:"auto",padding:"11px 24px",
-                      opacity:loadingExplore||(selectedDims.length===0&&selectedMetrics.length===0)||!selectedProp?0.5:1}}
-                    onClick={runExplore}
-                    disabled={loadingExplore||(selectedDims.length===0&&selectedMetrics.length===0)}
-                  >
+                  <button style={{...S.btnPrimary,width:"auto",padding:"11px 24px",opacity:loadingExplore||(selectedDims.length===0&&selectedMetrics.length===0)?0.5:1}}
+                    onClick={runExplore} disabled={loadingExplore||(selectedDims.length===0&&selectedMetrics.length===0)}>
                     {loadingExplore?"Running…":"Run Report →"}
                   </button>
                 </div>
               </div>
-
               {(selectedDims.length>0||selectedMetrics.length>0)&&(
                 <div style={{marginTop:"10px",fontSize:"12px",color:BL.lightGrey}}>
-                  {selectedDims.length} dimension{selectedDims.length!==1?"s":""} · {selectedMetrics.length} metric{selectedMetrics.length!==1?"s":""} · {startDate||"30daysAgo"} → {endDate||"today"}
-                  <button onClick={()=>{setSelectedDims([]);setSelectedMetrics([]);setResults(null);setOrderBy("");}}
-                    style={{marginLeft:"12px",background:"none",border:"none",color:BL.danger,fontSize:"12px",cursor:"pointer",fontFamily:"inherit"}}>
-                    Clear all
-                  </button>
+                  {selectedDims.length} dim · {selectedMetrics.length} metric · {filters.length} filter{filters.length!==1?"s":""} · {startDate||"30daysAgo"} → {endDate||"today"}
+                  <button onClick={()=>{setSelectedDims([]);setSelectedMetrics([]);setResults(null);setOrderBy("");setFilters([]);}}
+                    style={{marginLeft:"12px",background:"none",border:"none",color:BL.danger,fontSize:"12px",cursor:"pointer",fontFamily:"inherit"}}>Clear all</button>
                 </div>
               )}
             </div>
@@ -525,16 +590,13 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate }) {
           {exploreError&&<div style={S.errorBox}><strong>Error:</strong> {exploreError}</div>}
           {loadingExplore&&<div style={{...S.loadingBox,padding:"40px"}}><div style={S.spinner}/><span>Querying GA4…</span></div>}
 
-          {/* Results table */}
           {results&&results.rows.length>0&&(
             <div style={S.section}>
               <div style={S.sectionHeader}>
                 <span style={S.sectionTitle}>Results</span>
-                <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+                <div style={{display:"flex",gap:"8px"}}>
                   <span style={S.sectionCount}>{results.row_count.toLocaleString()} rows</span>
-                  <span style={{...S.badge,fontSize:"11px"}}>
-                    {results.dimensions.length} dim · {results.metrics.length} met
-                  </span>
+                  <span style={{...S.badge,fontSize:"11px"}}>{results.dimensions.length} dim · {results.metrics.length} met · {filters.length} filter{filters.length!==1?"s":""}</span>
                 </div>
               </div>
               <div style={{overflowX:"auto"}}>
@@ -542,37 +604,16 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate }) {
                   <thead>
                     <tr>
                       <th style={{...S.th,width:"40px",textAlign:"center"}}>#</th>
-                      {results.dimensions.map(d=>{
-                        const meta = GA4_DIMENSIONS.find(x=>x.id===d);
-                        return <th key={d} style={{...S.th,color:BL.yellow}}>{meta?.label||d}</th>;
-                      })}
-                      {results.metrics.map(m=>{
-                        const meta = GA4_METRICS.find(x=>x.id===m);
-                        return <th key={m} style={{...S.th,color:BL.info}}>{meta?.label||m}</th>;
-                      })}
+                      {results.dimensions.map(d=>{const m=GA4_DIMENSIONS.find(x=>x.id===d)||selectedDims.find(x=>x.id===d);return<th key={d} style={{...S.th,color:BL.yellow}}>{m?.label||d}</th>;})}
+                      {results.metrics.map(m=>{const mt=GA4_METRICS.find(x=>x.id===m);return<th key={m} style={{...S.th,color:BL.info}}>{mt?.label||m}</th>;})}
                     </tr>
                   </thead>
                   <tbody>
                     {results.rows.map((row,i)=>(
-                      <tr key={i}
-                        onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.03)"}
-                        onMouseLeave={e=>e.currentTarget.style.background="transparent"}
-                      >
+                      <tr key={i} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.03)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                         <td style={{...S.td,color:BL.midGrey,textAlign:"center",fontSize:"11px"}}>{i+1}</td>
-                        {results.dimensions.map(d=>(
-                          <td key={d} style={S.td}>
-                            <span style={{fontSize:"13px"}}>{row[d]||<span style={{color:BL.midGrey}}>(not set)</span>}</span>
-                          </td>
-                        ))}
-                        {results.metrics.map(m=>(
-                          <td key={m} style={S.td}>
-                            <span style={{fontWeight:600,color:BL.white}}>
-                              {parseFloat(row[m])%1===0
-                                ? parseInt(row[m]).toLocaleString()
-                                : parseFloat(row[m]).toFixed(2)}
-                            </span>
-                          </td>
-                        ))}
+                        {results.dimensions.map(d=><td key={d} style={S.td}>{row[d]||<span style={{color:BL.midGrey}}>(not set)</span>}</td>)}
+                        {results.metrics.map(m=><td key={m} style={S.td}><span style={{fontWeight:600,color:BL.white}}>{parseFloat(row[m])%1===0?parseInt(row[m]).toLocaleString():parseFloat(row[m]).toFixed(2)}</span></td>)}
                       </tr>
                     ))}
                   </tbody>
@@ -580,19 +621,12 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate }) {
               </div>
             </div>
           )}
-
-          {results&&results.rows.length===0&&(
-            <div style={{...S.infoBox,textAlign:"center"}}>
-              No data returned for this combination. Try a different date range or dimensions.
-            </div>
-          )}
-
+          {results&&results.rows.length===0&&<div style={{...S.infoBox,textAlign:"center"}}>No data for this combination. Try a different date range, dimensions, or filters.</div>}
           {!results&&!loadingExplore&&(selectedDims.length>0||selectedMetrics.length>0)&&(
             <div style={{padding:"32px",textAlign:"center",color:BL.lightGrey,fontSize:"13px",border:`1px dashed ${BL.border}`,borderRadius:"10px"}}>
               Hit <strong style={{color:BL.white}}>Run Report</strong> to query GA4 with your selected fields.
             </div>
           )}
-
           {selectedDims.length===0&&selectedMetrics.length===0&&!results&&(
             <div style={{padding:"40px",textAlign:"center",color:BL.lightGrey}}>
               <div style={{fontSize:"28px",marginBottom:"10px"}}>🧩</div>
