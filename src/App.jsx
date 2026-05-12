@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import * as XLSX from "xlsx";
 
 const API = import.meta.env.VITE_API_URL || "https://ga4-audit-backend.onrender.com";
 
@@ -24,6 +25,8 @@ const S = {
   logoMark: { background:BL.yellow, color:BL.black, fontWeight:900, fontSize:"13px", padding:"4px 8px", borderRadius:"4px", letterSpacing:"0.5px" },
   badge: { background:BL.midGrey, color:BL.lightGrey, fontSize:"11px", padding:"3px 10px", borderRadius:"20px", fontWeight:500 },
   main: { maxWidth:"1280px", margin:"0 auto", padding:"40px 24px" },
+  tabs: { display:"flex", gap:"4px", marginBottom:"32px", background:BL.darkGrey, padding:"4px", borderRadius:"10px", border:`1px solid ${BL.border}`, width:"fit-content" },
+  tab: (active) => ({ padding:"8px 20px", borderRadius:"7px", fontSize:"13px", fontWeight:700, cursor:"pointer", border:"none", fontFamily:"inherit", background:active?BL.yellow:"transparent", color:active?BL.black:BL.lightGrey, transition:"all 0.15s" }),
   loginWrap: { display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"80vh" },
   loginCard: { background:BL.darkGrey, border:`1px solid ${BL.border}`, borderRadius:"16px", padding:"48px 48px 40px", maxWidth:"440px", width:"100%", textAlign:"center" },
   loginTitle: { fontSize:"26px", fontWeight:800, letterSpacing:"-0.8px", marginBottom:"8px" },
@@ -37,6 +40,7 @@ const S = {
   select: { background:BL.black, border:`1px solid ${BL.border}`, borderRadius:"8px", color:BL.white, padding:"10px 36px 10px 14px", fontSize:"14px", width:"100%", outline:"none", cursor:"pointer", fontFamily:"inherit", appearance:"none", backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239A9A9A' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat:"no-repeat", backgroundPosition:"right 14px center" },
   btnPrimary: { background:BL.yellow, color:BL.black, border:"none", borderRadius:"8px", padding:"11px 24px", fontWeight:800, fontSize:"14px", cursor:"pointer", fontFamily:"inherit", letterSpacing:"-0.2px", width:"100%" },
   btnGhost: { background:"transparent", color:BL.lightGrey, border:`1px solid ${BL.border}`, borderRadius:"8px", padding:"8px 16px", fontWeight:600, fontSize:"13px", cursor:"pointer", fontFamily:"inherit" },
+  btnOutline: { background:"transparent", color:BL.yellow, border:`1px solid ${BL.yellow}`, borderRadius:"8px", padding:"9px 18px", fontWeight:700, fontSize:"13px", cursor:"pointer", fontFamily:"inherit", letterSpacing:"-0.2px" },
   kpiGrid: { display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:"16px", marginBottom:"32px" },
   kpiCard: { background:BL.darkGrey, border:`1px solid ${BL.border}`, borderRadius:"12px", padding:"20px 20px 20px 24px", position:"relative", overflow:"hidden" },
   kpiAccent: { position:"absolute", top:0, left:0, width:"3px", height:"100%" },
@@ -53,12 +57,17 @@ const S = {
   th: { padding:"10px 16px", textAlign:"left", fontSize:"11px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.8px", color:BL.lightGrey, background:"rgba(255,255,255,0.03)", borderBottom:`1px solid ${BL.border}`, whiteSpace:"nowrap" },
   td: { padding:"11px 16px", borderBottom:`1px solid ${BL.border}`, color:BL.white, verticalAlign:"middle", lineHeight:"1.4" },
   pill: (ok) => ({ display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:ok?"rgba(0,200,150,0.12)":"rgba(255,68,68,0.12)", color:ok?BL.success:BL.danger }),
+  pillWarning: { display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:"rgba(255,152,0,0.12)", color:BL.warning },
+  pillNeutral: { display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:"rgba(255,255,255,0.06)", color:BL.lightGrey },
   errorBox: { background:"rgba(255,68,68,0.08)", border:`1px solid rgba(255,68,68,0.3)`, borderRadius:"10px", padding:"16px 20px", color:BL.danger, fontSize:"14px", marginBottom:"24px" },
+  infoBox: { background:"rgba(74,158,255,0.08)", border:`1px solid rgba(74,158,255,0.3)`, borderRadius:"10px", padding:"14px 18px", color:BL.info, fontSize:"13px", marginBottom:"20px" },
   loadingBox: { display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", gap:"16px", color:BL.lightGrey, fontSize:"14px" },
   spinner: { width:"36px", height:"36px", border:`3px solid ${BL.border}`, borderTopColor:BL.yellow, borderRadius:"50%", animation:"spin 0.8s linear infinite" },
   userChip: { display:"flex", alignItems:"center", gap:"8px", background:BL.midGrey, borderRadius:"20px", padding:"4px 14px 4px 4px" },
   avatar: { width:"28px", height:"28px", borderRadius:"50%", objectFit:"cover" },
   avatarFallback: { width:"28px", height:"28px", borderRadius:"50%", background:BL.yellow, color:BL.black, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"12px", fontWeight:800, flexShrink:0 },
+  dropzone: (hover) => ({ border:`2px dashed ${hover?BL.yellow:BL.border}`, borderRadius:"12px", padding:"40px 24px", textAlign:"center", cursor:"pointer", transition:"all 0.2s", background:hover?"rgba(255,212,38,0.04)":"transparent" }),
+  sdrEventRow: (status) => ({ background: status==="found"?"rgba(0,200,150,0.05)":status==="missing"?"rgba(255,68,68,0.05)":"rgba(255,152,0,0.05)", borderBottom:`1px solid ${BL.border}` }),
 };
 
 const CHECK_TIPS = {
@@ -191,29 +200,286 @@ function LoginScreen() {
   );
 }
 
-// ── Auth helper ─────────────────────────────────────────────────────────────
-function makeAuthHeader(tokenData) {
-  const encoded = btoa(JSON.stringify(tokenData));
-  return { Authorization: `Bearer ${encoded}` };
+// ── SDR Checker Tab ────────────────────────────────────────────────────────
+function SDRChecker({ auditData }) {
+  const [sdrRows, setSdrRows]       = useState([]);  // parsed from Excel
+  const [results, setResults]       = useState([]);  // cross-check output
+  const [dragOver, setDragOver]     = useState(false);
+  const [fileName, setFileName]     = useState("");
+  const [manualEvent, setManualEvent]   = useState("");
+  const [manualParam, setManualParam]   = useState("");
+  const [manualRows, setManualRows]     = useState([]);
+  const fileRef = useRef();
+
+  // GA4 live event inventory from audit
+  const liveEvents = new Set(
+    (auditData?.["GA4 Events"] || []).map(e => e.Check?.trim().toLowerCase())
+  );
+  // Custom dimensions (parameters) from audit
+  const liveParams = new Set(
+    (auditData?.["Custom Dimension Details"] || []).map(e =>
+      e.Result?.["Parameter Name"]?.trim().toLowerCase()
+    ).filter(Boolean)
+  );
+
+  const parseExcel = (file) => {
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const wb = XLSX.read(e.target.result, { type: "binary" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+
+      // Find header row — look for "Events" or "Event" column
+      let headerIdx = -1;
+      let eventsCol = -1, paramsCol = -1;
+      for (let i = 0; i < Math.min(raw.length, 10); i++) {
+        const row = raw[i].map(c => String(c).trim().toLowerCase());
+        const eIdx = row.findIndex(c => c === "events" || c === "event");
+        const pIdx = row.findIndex(c => c.includes("param") || c.includes("parameter"));
+        if (eIdx >= 0) { headerIdx = i; eventsCol = eIdx; paramsCol = pIdx; break; }
+      }
+
+      if (headerIdx < 0) {
+        // Fallback: assume col 0 = event, col 2 = param (matches your SDR layout)
+        headerIdx = 3; eventsCol = 0; paramsCol = 2;
+      }
+
+      const parsed = [];
+      for (let i = headerIdx + 1; i < raw.length; i++) {
+        const row = raw[i];
+        const eventName = String(row[eventsCol] || "").trim();
+        const paramName = paramsCol >= 0 ? String(row[paramsCol] || "").trim() : "";
+        if (eventName) parsed.push({ eventName, paramName });
+      }
+      setSdrRows(parsed);
+      crossCheck(parsed);
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const crossCheck = (rows) => {
+    const checked = rows.map(r => {
+      const evtKey = r.eventName.toLowerCase();
+      const paramKey = r.paramName.toLowerCase();
+      const eventFound = liveEvents.has(evtKey);
+      // Params: check in custom dims OR it's a standard GA4 param
+      const standardParams = new Set(["page_title","page_location","page_path","session_id","engagement_time_msec","percent_scrolled","form_name","form_id","form_destination","link_url","link_text","file_name","video_title","search_term","currency","value","transaction_id","item_id","item_name","item_brand","item_category","item_variant","price","quantity","coupon","affiliation","shipping","tax","form_field_name"]);
+      const paramFound = !paramKey || liveParams.has(paramKey) || standardParams.has(paramKey);
+      const status = eventFound && paramFound ? "found" : !eventFound ? "missing_event" : "missing_param";
+      return { ...r, eventFound, paramFound, status };
+    });
+    setResults(checked);
+  };
+
+  const addManual = () => {
+    if (!manualEvent.trim()) return;
+    const newRow = { eventName: manualEvent.trim(), paramName: manualParam.trim() };
+    const updated = [...manualRows, newRow];
+    setManualRows(updated);
+    setManualEvent(""); setManualParam("");
+    crossCheck([...sdrRows, ...updated]);
+  };
+
+  const removeManual = (idx) => {
+    const updated = manualRows.filter((_,i)=>i!==idx);
+    setManualRows(updated);
+    crossCheck([...sdrRows, ...updated]);
+  };
+
+  const allRows = results.length > 0 ? results : [];
+  const foundCount   = allRows.filter(r=>r.status==="found").length;
+  const missingEvent = allRows.filter(r=>r.status==="missing_event").length;
+  const missingParam = allRows.filter(r=>r.status==="missing_param").length;
+
+  if (!auditData) {
+    return (
+      <div style={{ padding:"60px 0", textAlign:"center", color:BL.lightGrey }}>
+        <div style={{ fontSize:"32px", marginBottom:"12px" }}>📋</div>
+        <div style={{ fontSize:"15px", fontWeight:600, marginBottom:"8px", color:BL.white }}>Run an audit first</div>
+        <div style={{ fontSize:"13px" }}>Select a GA4 property and run the audit to enable SDR cross-checking.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ marginBottom:"24px" }}>
+        <div style={{ fontSize:"22px", fontWeight:800, letterSpacing:"-0.6px", marginBottom:"4px" }}>SDR Event Checker</div>
+        <div style={{ color:BL.lightGrey, fontSize:"13px" }}>
+          Upload your Solution Design Reference (Excel) to cross-check expected events and parameters against live GA4 data.
+        </div>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"20px", marginBottom:"24px" }}>
+        {/* Excel Upload */}
+        <div style={S.section}>
+          <div style={S.sectionHeader}>
+            <span style={S.sectionTitle}>Import SDR (Excel)</span>
+            {fileName && <span style={S.sectionCount}>{fileName}</span>}
+          </div>
+          <div style={{ padding:"20px" }}>
+            <div
+              style={S.dropzone(dragOver)}
+              onDragOver={e=>{e.preventDefault();setDragOver(true);}}
+              onDragLeave={()=>setDragOver(false)}
+              onDrop={e=>{e.preventDefault();setDragOver(false);const f=e.dataTransfer.files[0];if(f)parseExcel(f);}}
+              onClick={()=>fileRef.current.click()}
+            >
+              <div style={{ fontSize:"28px", marginBottom:"10px" }}>📂</div>
+              <div style={{ fontWeight:700, fontSize:"14px", marginBottom:"4px" }}>Drop your SDR Excel here</div>
+              <div style={{ fontSize:"12px", color:BL.lightGrey }}>or click to browse · .xlsx, .xls supported</div>
+              <input ref={fileRef} type="file" accept=".xlsx,.xls" style={{display:"none"}}
+                onChange={e=>{if(e.target.files[0])parseExcel(e.target.files[0]);}}/>
+            </div>
+            <div style={{ marginTop:"14px", fontSize:"12px", color:BL.lightGrey, lineHeight:"1.6" }}>
+              <strong style={{color:BL.white}}>Expected column names:</strong><br/>
+              Column A → <code style={{color:BL.yellow}}>Events</code> &nbsp;|&nbsp;
+              Column C → <code style={{color:BL.yellow}}>Event Parameters</code><br/>
+              Matches your current SDR layout automatically.
+            </div>
+          </div>
+        </div>
+
+        {/* Manual Entry */}
+        <div style={S.section}>
+          <div style={S.sectionHeader}>
+            <span style={S.sectionTitle}>Manual Entry</span>
+            <span style={S.sectionCount}>{manualRows.length} added</span>
+          </div>
+          <div style={{ padding:"20px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:"10px", marginBottom:"16px", alignItems:"end" }}>
+              <div>
+                <label style={S.inputLabel}>Event Name</label>
+                <input style={S.input} placeholder="e.g. form_submit" value={manualEvent}
+                  onChange={e=>setManualEvent(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&addManual()}
+                  onFocus={e=>e.target.style.borderColor=BL.yellow}
+                  onBlur={e=>e.target.style.borderColor=BL.border}/>
+              </div>
+              <div>
+                <label style={S.inputLabel}>Parameter (optional)</label>
+                <input style={S.input} placeholder="e.g. form_name" value={manualParam}
+                  onChange={e=>setManualParam(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&addManual()}
+                  onFocus={e=>e.target.style.borderColor=BL.yellow}
+                  onBlur={e=>e.target.style.borderColor=BL.border}/>
+              </div>
+              <div style={{paddingTop:"19px"}}>
+                <button style={{...S.btnPrimary,width:"auto",padding:"10px 16px"}} onClick={addManual}>Add</button>
+              </div>
+            </div>
+            {manualRows.length > 0 && (
+              <div style={{ maxHeight:"160px", overflowY:"auto" }}>
+                {manualRows.map((r,i) => (
+                  <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${BL.border}`, fontSize:"13px" }}>
+                    <span>
+                      <span style={{ color:BL.white, fontWeight:600 }}>{r.eventName}</span>
+                      {r.paramName && <span style={{ color:BL.lightGrey }}> · {r.paramName}</span>}
+                    </span>
+                    <button onClick={()=>removeManual(i)} style={{ background:"none", border:"none", color:BL.lightGrey, cursor:"pointer", fontSize:"16px" }}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Results */}
+      {allRows.length > 0 && (
+        <>
+          {/* Stats */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"16px", marginBottom:"24px" }}>
+            {[
+              { label:"Events Found in GA4", value:foundCount, color:BL.success },
+              { label:"Events Not in GA4", value:missingEvent, color:BL.danger },
+              { label:"Params Not Registered", value:missingParam, color:BL.warning },
+            ].map((k,i) => (
+              <div key={i} style={S.kpiCard}>
+                <div style={{...S.kpiAccent,background:k.color}}/>
+                <div style={S.kpiLabel}>{k.label}</div>
+                <div style={{...S.kpiValue,color:k.color}}>{k.value}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={S.infoBox}>
+            ⓘ Events are matched against your live GA4 event inventory. Parameters are checked against your registered Custom Dimensions and standard GA4 parameters (page_title, form_name, etc.).
+          </div>
+
+          {/* Results Table */}
+          <div style={S.section}>
+            <div style={S.sectionHeader}>
+              <span style={S.sectionTitle}>Cross-Check Results</span>
+              <span style={S.sectionCount}>{allRows.length} rows checked</span>
+            </div>
+            <div style={S.tableWrap}>
+              <table style={S.table}>
+                <thead>
+                  <tr>
+                    <th style={S.th}>Event Name</th>
+                    <th style={S.th}>Parameter</th>
+                    <th style={S.th}>Event in GA4</th>
+                    <th style={S.th}>Param Registered</th>
+                    <th style={S.th}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allRows.map((r,i) => (
+                    <tr key={i}
+                      onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.03)"}
+                      onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+                    >
+                      <td style={S.td}><span style={{ fontFamily:"monospace", fontSize:"12px", color:BL.white }}>{r.eventName}</span></td>
+                      <td style={S.td}><span style={{ fontFamily:"monospace", fontSize:"12px", color:BL.lightGrey }}>{r.paramName || "—"}</span></td>
+                      <td style={S.td}>
+                        {r.eventFound
+                          ? <span style={S.pill(true)}>✓ Found</span>
+                          : <span style={S.pill(false)}>✗ Not found</span>}
+                      </td>
+                      <td style={S.td}>
+                        {!r.paramName
+                          ? <span style={S.pillNeutral}>— N/A</span>
+                          : r.paramFound
+                          ? <span style={S.pill(true)}>✓ Registered</span>
+                          : <span style={S.pillWarning}>⚠ Not registered</span>}
+                      </td>
+                      <td style={S.td}>
+                        {r.status==="found"
+                          ? <span style={S.pill(true)}>✓ All good</span>
+                          : r.status==="missing_event"
+                          ? <span style={S.pill(false)}>✗ Event missing</span>
+                          : <span style={S.pillWarning}>⚠ Param missing</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {allRows.length === 0 && (
+        <div style={{ padding:"40px", textAlign:"center", color:BL.lightGrey, fontSize:"13px" }}>
+          Upload an SDR Excel file or add events manually above to start checking.
+        </div>
+      )}
+    </div>
+  );
 }
 
-function saveAuth(payload) {
-  localStorage.setItem("ga4_auth", JSON.stringify(payload));
-}
-
-function loadAuth() {
-  try {
-    const raw = localStorage.getItem("ga4_auth");
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
-
-function clearAuth() {
-  localStorage.removeItem("ga4_auth");
-}
+// ── Auth helpers ────────────────────────────────────────────────────────────
+function makeAuthHeader(td) { return { Authorization: `Bearer ${btoa(JSON.stringify(td))}` }; }
+function saveAuth(p) { localStorage.setItem("ga4_auth", JSON.stringify(p)); }
+function loadAuth() { try { const r=localStorage.getItem("ga4_auth"); return r?JSON.parse(r):null; } catch{return null;} }
+function clearAuth() { localStorage.removeItem("ga4_auth"); }
 
 // ── Main App ────────────────────────────────────────────────────────────────
 export default function App() {
+  const [activeTab, setActiveTab]       = useState("audit");
   const [user, setUser]                 = useState(null);
   const [tokenData, setTokenData]       = useState(null);
   const [authLoading, setAuthLoading]   = useState(true);
@@ -228,81 +494,57 @@ export default function App() {
   const reportRef = useRef(null);
 
   useEffect(() => {
-    // 1. Check URL fragment for fresh auth payload (#auth=...)
     const hash = window.location.hash;
     if (hash.startsWith("#auth=")) {
       try {
-        const encoded = hash.slice(6);
-        const payload = JSON.parse(atob(encoded));
+        const payload = JSON.parse(atob(hash.slice(6)));
         saveAuth(payload);
-        setUser(payload.user_info);
-        setTokenData(payload.token_data);
-        // Clean URL — remove the fragment
+        setUser(payload.user_info); setTokenData(payload.token_data);
         window.history.replaceState(null, "", window.location.pathname);
-        setAuthLoading(false);
-        loadProperties(payload.token_data);
-        return;
-      } catch(e) {
-        console.error("Failed to parse auth payload", e);
-      }
+        setAuthLoading(false); loadProperties(payload.token_data); return;
+      } catch(e) { console.error(e); }
     }
-
-    // 2. Check localStorage for existing session
     const saved = loadAuth();
     if (saved?.token_data && saved?.user_info) {
-      setUser(saved.user_info);
-      setTokenData(saved.token_data);
-      setAuthLoading(false);
-      loadProperties(saved.token_data);
-      return;
+      setUser(saved.user_info); setTokenData(saved.token_data);
+      setAuthLoading(false); loadProperties(saved.token_data); return;
     }
-
     setAuthLoading(false);
   }, []);
 
   const loadProperties = async (td) => {
     setPropLoading(true);
     try {
-      const res = await axios.get(`${API}/list-properties`, {
-        headers: makeAuthHeader(td),
-      });
+      const res = await axios.get(`${API}/list-properties`, { headers: makeAuthHeader(td) });
       if (res.data.success) setProperties(res.data.properties);
-    } catch(e) {
-      console.error("Failed to load properties", e);
-    } finally {
-      setPropLoading(false);
-    }
+    } catch(e) { console.error(e); }
+    finally { setPropLoading(false); }
   };
 
   const handleLogout = () => {
-    clearAuth();
-    setUser(null);
-    setTokenData(null);
-    setProperties([]);
-    setData(null);
-    setSelectedProp("");
+    clearAuth(); setUser(null); setTokenData(null);
+    setProperties([]); setData(null); setSelectedProp("");
   };
 
   const runAudit = async () => {
-    if (!selectedProp || !tokenData) return;
+    if (!selectedProp||!tokenData) return;
     setLoading(true); setError(null); setData(null);
     try {
       const res = await axios.get(`${API}/run-audit`, {
-        params: { property_id:selectedProp, start_date:startDate||"30daysAgo", end_date:endDate||"today" },
+        params:{property_id:selectedProp,start_date:startDate||"30daysAgo",end_date:endDate||"today"},
         headers: makeAuthHeader(tokenData),
       });
-      if (res.data.success) setData(res.data.data);
-      else setError(res.data.error || "Unknown error during audit.");
-    } catch(err) {
-      setError("Audit failed: " + (err.response?.data?.detail || err.message));
-    } finally { setLoading(false); }
+      if (res.data.success) { setData(res.data.data); setActiveTab("audit"); }
+      else setError(res.data.error||"Unknown error.");
+    } catch(err) { setError("Audit failed: "+(err.response?.data?.detail||err.message)); }
+    finally { setLoading(false); }
   };
 
   const handleDownloadPdf = async () => {
     if (!reportRef.current) return;
     setLoading(true);
     try {
-      const canvas = await html2canvas(reportRef.current, { scale:2, backgroundColor:"#0A0A0A" });
+      const canvas = await html2canvas(reportRef.current,{scale:2,backgroundColor:"#0A0A0A"});
       const imgData = canvas.toDataURL("image/png");
       const pdf = new window.jspdf.jsPDF("p","mm","a4");
       const imgW=210,pageH=297,imgH=canvas.height*imgW/canvas.width;
@@ -314,8 +556,8 @@ export default function App() {
     finally{setLoading(false);}
   };
 
-  const kpis = data ? extractKPIs(data) : [];
-  const summaryItems = data ? generateSummary(data) : [];
+  const kpis = data?extractKPIs(data):[];
+  const summaryItems = data?generateSummary(data):[];
   const health = summaryItems.length===1&&summaryItems[0].type==="ok"?"healthy"
     :summaryItems.some(s=>s.type==="error")?"critical":"warning";
   const selectedPropName = properties.find(p=>p.property_id===selectedProp)?.display_name;
@@ -334,6 +576,7 @@ export default function App() {
         ::-webkit-scrollbar-track{background:#1A1A1A;}
         ::-webkit-scrollbar-thumb{background:#3D3D3D;border-radius:3px;}
         option{background:#1A1A1A;color:#fff;}
+        code{background:rgba(255,212,38,0.1);padding:1px 5px;border-radius:3px;font-size:11px;}
       `}</style>
       <div style={S.root}>
 
@@ -351,8 +594,7 @@ export default function App() {
             )}
             {user&&(
               <div style={S.userChip}>
-                {user.picture
-                  ?<img src={user.picture} alt="" style={S.avatar} referrerPolicy="no-referrer"/>
+                {user.picture?<img src={user.picture} alt="" style={S.avatar} referrerPolicy="no-referrer"/>
                   :<div style={S.avatarFallback}>{user.name?.[0]??"U"}</div>}
                 <span style={{fontSize:"13px",fontWeight:600,color:BL.white}}>{user.name?.split(" ")[0]}</span>
                 <button onClick={handleLogout} style={{...S.btnGhost,padding:"4px 10px",fontSize:"12px",marginLeft:"4px"}}>Sign out</button>
@@ -367,10 +609,7 @@ export default function App() {
 
           {!authLoading&&user&&(
             <>
-              <div style={{fontSize:"28px",fontWeight:800,letterSpacing:"-0.8px",marginBottom:"4px"}}>GA4 Property Audit</div>
-              <div style={{color:BL.lightGrey,fontSize:"14px",marginBottom:"32px"}}>Select a property and date range, then run a full diagnostic.</div>
-
-              {/* Input Panel */}
+              {/* Input Panel — always visible */}
               <div style={S.inputPanel}>
                 <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr auto",gap:"16px",alignItems:"end"}}>
                   <div>
@@ -415,9 +654,17 @@ export default function App() {
               {error&&<div style={S.errorBox}><strong>Error:</strong> {error}</div>}
               {loading&&<div style={S.loadingBox}><div style={S.spinner}/><span>Fetching data from GA4 API…</span></div>}
 
-              {data&&(
+              {/* Tabs */}
+              <div style={S.tabs}>
+                <button style={S.tab(activeTab==="audit")} onClick={()=>setActiveTab("audit")}>Audit Report</button>
+                <button style={S.tab(activeTab==="sdr")} onClick={()=>setActiveTab("sdr")}>
+                  SDR Checker {data&&<span style={{marginLeft:"6px",background:activeTab==="sdr"?"rgba(0,0,0,0.15)":"rgba(255,212,38,0.2)",color:activeTab==="sdr"?BL.black:BL.yellow,fontSize:"10px",padding:"1px 6px",borderRadius:"10px",fontWeight:800}}>NEW</span>}
+                </button>
+              </div>
+
+              {/* Audit Tab */}
+              {activeTab==="audit"&&data&&(
                 <div ref={reportRef} className="fade-in">
-                  {/* KPI Cards */}
                   {kpis.length>0&&(
                     <>
                       <div style={{fontSize:"11px",fontWeight:700,textTransform:"uppercase",letterSpacing:"1px",color:BL.lightGrey,marginBottom:"12px"}}>Dashboard Overview</div>
@@ -432,8 +679,6 @@ export default function App() {
                       </div>
                     </>
                   )}
-
-                  {/* Summary */}
                   <div style={{...S.section,marginBottom:"28px"}}>
                     <div style={S.sectionHeader}>
                       <span style={S.sectionTitle}>Audit Summary</span>
@@ -450,8 +695,6 @@ export default function App() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Audit sections */}
                   {data["Property Details"]?.length>0&&<AuditSection title="Property Details" count={data["Property Details"].length}><CheckResultTable entries={data["Property Details"]}/></AuditSection>}
                   {data["Streams Configuration"]?.length>0&&<AuditSection title="Streams Configuration" count={data["Streams Configuration"].length}><CheckResultTable entries={data["Streams Configuration"]}/></AuditSection>}
                   {data["GA4 Property Limits"]?.length>0&&<AuditSection title="GA4 Property Limits"><CheckResultTable entries={data["GA4 Property Limits"]}/></AuditSection>}
@@ -484,14 +727,24 @@ export default function App() {
                   {data["Channel Grouping Data"]?.length>0&&<AuditSection title="Channel Grouping Data" count={data["Channel Grouping Data"].length}><AuditTable columns={["Channel Group","Sessions"]} rows={data["Channel Grouping Data"].slice(0,15).map(e=>[e["Channel Group"],e.Sessions])}/></AuditSection>}
                   {data["Unassigned Traffic Details"]?.length>0&&<AuditSection title="Unassigned Traffic Details"><CheckResultTable entries={data["Unassigned Traffic Details"]}/></AuditSection>}
                   {data["Unassigned Source/Medium Data"]?.length>0&&<AuditSection title="Unassigned Source/Medium Breakdown" count={data["Unassigned Source/Medium Data"].length}><AuditTable columns={["Channel Group","Source","Medium","Sessions"]} rows={data["Unassigned Source/Medium Data"].slice(0,15).map(e=>[e["Channel Group"],e.Source,e.Medium,e.Sessions])}/></AuditSection>}
-
-                  {/* Download */}
                   <div style={{display:"flex",justifyContent:"center",marginTop:"40px",paddingBottom:"48px"}}>
                     <button style={{...S.btnPrimary,width:"auto",padding:"14px 40px",fontSize:"15px",opacity:loading?0.5:1}}
                       onClick={handleDownloadPdf} disabled={loading}>
                       {loading?"Generating…":"Download Report (PDF)"}
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* SDR Tab */}
+              {activeTab==="sdr"&&<SDRChecker auditData={data}/>}
+
+              {/* Empty state when no audit yet */}
+              {activeTab==="audit"&&!data&&!loading&&(
+                <div style={{padding:"60px 0",textAlign:"center",color:BL.lightGrey}}>
+                  <div style={{fontSize:"32px",marginBottom:"12px"}}>🔍</div>
+                  <div style={{fontSize:"15px",fontWeight:600,marginBottom:"8px",color:BL.white}}>Ready to audit</div>
+                  <div style={{fontSize:"13px"}}>Select a property above and hit Run Audit to get started.</div>
                 </div>
               )}
             </>
