@@ -643,15 +643,112 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate, customDims 
 
 function LoginScreen() {
   return (
-    <div style={S.loginWrap}>
-      <div style={S.loginCard}>
-        <div style={{marginBottom:"20px"}}>
-          <span style={{...S.logoMark,fontSize:"16px",padding:"6px 12px"}}>BL</span>
+    <div style={{
+      display:"flex",
+      alignItems:"center",
+      justifyContent:"center",
+      minHeight:"80vh",
+      gap:"0",
+      padding:"40px 24px",
+    }}>
+      {/* ── Left: Brainlabs logo panel ── */}
+      <div style={{
+        flex:"0 0 420px",
+        display:"flex",
+        flexDirection:"column",
+        alignItems:"center",
+        justifyContent:"center",
+        padding:"60px 48px",
+        borderRight:"2px solid #e8e0b0",
+        minHeight:"480px",
+      }}>
+        <img
+          src="/brainlabs-logo.jpg"
+          alt="Brainlabs"
+          style={{
+            width:"220px",
+            height:"220px",
+            objectFit:"contain",
+            marginBottom:"28px",
+            borderRadius:"12px",
+          }}
+        />
+        <div style={{
+          fontSize:"28px",
+          fontWeight:800,
+          letterSpacing:"-0.8px",
+          color:"#1a1200",
+          marginBottom:"8px",
+          textAlign:"center",
+        }}>
+          brainlabs
         </div>
-        <div style={S.loginTitle}>GA4 Audit Tool</div>
-        <div style={S.loginSub}>Sign in with your Google account to audit any GA4 property you have access to.</div>
-        <a href={`${API}/auth/google`} style={{textDecoration:"none"}}>
-          <button style={S.googleBtn}>
+        <div style={{
+          fontSize:"13px",
+          color:"#7a6f00",
+          textAlign:"center",
+          lineHeight:"1.6",
+          maxWidth:"260px",
+        }}>
+          Test-and-learn, data-driven,<br/>experimentation-first.
+        </div>
+      </div>
+
+      {/* ── Right: Sign-in card ── */}
+      <div style={{
+        flex:"0 0 420px",
+        display:"flex",
+        flexDirection:"column",
+        justifyContent:"center",
+        padding:"60px 48px",
+        minHeight:"480px",
+      }}>
+        <div style={{
+          display:"inline-flex",
+          alignItems:"center",
+          gap:"10px",
+          marginBottom:"24px",
+        }}>
+          <span style={{...S.logoMark,fontSize:"13px",padding:"4px 8px"}}>BL</span>
+          <span style={{fontSize:"14px",fontWeight:700,color:"#7a6f00",letterSpacing:"0.5px",textTransform:"uppercase"}}>GA4 Audit Tool</span>
+        </div>
+        <div style={{
+          fontSize:"30px",
+          fontWeight:800,
+          letterSpacing:"-0.8px",
+          color:"#1a1200",
+          marginBottom:"8px",
+          lineHeight:1.15,
+        }}>
+          Audit your GA4<br/>property.
+        </div>
+        <div style={{
+          color:"#7a6f00",
+          fontSize:"14px",
+          marginBottom:"36px",
+          lineHeight:"1.6",
+        }}>
+          Sign in with your Google account to see all properties you have access to and run a full diagnostic.
+        </div>
+        <a href={`${API}/auth/google`} style={{textDecoration:"none",display:"block",marginBottom:"20px"}}>
+          <button style={{
+            display:"flex",
+            alignItems:"center",
+            justifyContent:"center",
+            gap:"12px",
+            background:"#1a1200",
+            color:"#fffceb",
+            border:"none",
+            borderRadius:"10px",
+            padding:"14px 24px",
+            fontWeight:700,
+            fontSize:"15px",
+            cursor:"pointer",
+            fontFamily:"inherit",
+            width:"100%",
+            letterSpacing:"-0.2px",
+            transition:"opacity 0.2s",
+          }}>
             <svg width="20" height="20" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
               <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
@@ -661,8 +758,16 @@ function LoginScreen() {
             Sign in with Google
           </button>
         </a>
-        <div style={S.divider}/>
-        <div style={S.loginFooter}>Your data is accessed securely via Google OAuth.<br/>Only properties you own or manage will be shown.</div>
+        <div style={{
+          fontSize:"12px",
+          color:"#7a6f00",
+          lineHeight:"1.6",
+          borderTop:"1px solid #e8e0b0",
+          paddingTop:"16px",
+        }}>
+          🔒 Your data is accessed securely via Google OAuth.<br/>
+          Only properties you own or manage will be shown.
+        </div>
       </div>
     </div>
   );
