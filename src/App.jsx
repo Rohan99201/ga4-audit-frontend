@@ -202,13 +202,16 @@ function LoginScreen() {
 
 // ── SDR Checker Tab ────────────────────────────────────────────────────────
 function SDRChecker({ auditData }) {
-  const [sdrRows, setSdrRows]       = useState([]);  // parsed from Excel
+  const [sdrRows, setSdrRows]       = useState([]);  // parsed from Excel: [{eventName, params:[]}]
   const [results, setResults]       = useState([]);  // cross-check output
   const [dragOver, setDragOver]     = useState(false);
   const [fileName, setFileName]     = useState("");
   const [manualEvent, setManualEvent]   = useState("");
-  const [manualParam, setManualParam]   = useState("");
+  const [manualParams, setManualParams] = useState([""]);  // array of param inputs
   const [manualRows, setManualRows]     = useState([]);
+  const [workbook, setWorkbook]         = useState(null);
+  const [sheetNames, setSheetNames]     = useState([]);
+  const [selectedSheet, setSelectedSheet] = useState("");
   const fileRef = useRef();
 
   // GA4 live event inventory from audit
@@ -222,75 +225,134 @@ function SDRChecker({ auditData }) {
     ).filter(Boolean)
   );
 
+  const STANDARD_PARAMS = new Set([
+    "page_title","page_location","page_path","page_referrer","session_id",
+    "engagement_time_msec","percent_scrolled","form_name","form_id",
+    "form_destination","form_length","form_submit_text","link_url","link_text",
+    "link_domain","link_classes","link_id","outbound","file_name","file_extension",
+    "video_title","video_url","video_provider","video_current_time","video_duration",
+    "video_percent","visible","search_term","currency","value","transaction_id",
+    "item_id","item_name","item_brand","item_category","item_category2",
+    "item_category3","item_category4","item_category5","item_variant","item_list_name",
+    "item_list_id","index","price","quantity","coupon","affiliation","shipping","tax",
+    "payment_type","shipping_tier","promotion_id","promotion_name","creative_name",
+    "creative_slot","location_id","method","content_type","content_id",
+    "achievement_id","character","level","score","search_term","virtual_currency_name",
+    "value","group_id","language","screen_resolution",
+  ]);
+
   const parseExcel = (file) => {
     setFileName(file.name);
+    setSdrRows([]); setResults([]); setSelectedSheet(""); setSheetNames([]);
     const reader = new FileReader();
     reader.onload = (e) => {
       const wb = XLSX.read(e.target.result, { type: "binary" });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-
-      // Find header row — look for "Events" or "Event" column
-      let headerIdx = -1;
-      let eventsCol = -1, paramsCol = -1;
-      for (let i = 0; i < Math.min(raw.length, 10); i++) {
-        const row = raw[i].map(c => String(c).trim().toLowerCase());
-        const eIdx = row.findIndex(c => c === "events" || c === "event");
-        const pIdx = row.findIndex(c => c.includes("param") || c.includes("parameter"));
-        if (eIdx >= 0) { headerIdx = i; eventsCol = eIdx; paramsCol = pIdx; break; }
+      setWorkbook(wb);
+      setSheetNames(wb.SheetNames);
+      // Auto-select if only one sheet
+      if (wb.SheetNames.length === 1) {
+        parseSheet(wb, wb.SheetNames[0]);
+        setSelectedSheet(wb.SheetNames[0]);
       }
-
-      if (headerIdx < 0) {
-        // Fallback: assume col 0 = event, col 2 = param (matches your SDR layout)
-        headerIdx = 3; eventsCol = 0; paramsCol = 2;
-      }
-
-      const parsed = [];
-      for (let i = headerIdx + 1; i < raw.length; i++) {
-        const row = raw[i];
-        const eventName = String(row[eventsCol] || "").trim();
-        const paramName = paramsCol >= 0 ? String(row[paramsCol] || "").trim() : "";
-        if (eventName) parsed.push({ eventName, paramName });
-      }
-      setSdrRows(parsed);
-      crossCheck(parsed);
+      // Otherwise wait for user to pick — sheet picker UI appears
     };
     reader.readAsBinaryString(file);
   };
 
+  const parseSheet = (wb, sheetName) => {
+    const ws = wb.Sheets[sheetName];
+    const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+
+    // Find header row — look for "Events" or "Event" column
+    let headerIdx = -1;
+    let eventsCol = -1, paramsCol = -1;
+    for (let i = 0; i < Math.min(raw.length, 15); i++) {
+      const row = raw[i].map(c => String(c).trim().toLowerCase());
+      const eIdx = row.findIndex(c => c === "events" || c === "event name" || c === "event");
+      const pIdx = row.findIndex(c => c.includes("param") || c.includes("parameter") || c === "desired parameter");
+      if (eIdx >= 0) { headerIdx = i; eventsCol = eIdx; paramsCol = pIdx; break; }
+    }
+    if (headerIdx < 0) { headerIdx = 3; eventsCol = 0; paramsCol = 2; }
+
+    // Group rows by event name — consecutive blank event cells belong to same event
+    const parsed = [];
+    let lastEvent = "";
+    for (let i = headerIdx + 1; i < raw.length; i++) {
+      const row = raw[i];
+      const eventName = String(row[eventsCol] || "").trim();
+      const paramName = paramsCol >= 0 ? String(row[paramsCol] || "").trim() : "";
+      const resolvedEvent = eventName || lastEvent;
+      if (!resolvedEvent) continue;
+      lastEvent = resolvedEvent;
+
+      // Find existing entry for this event or create one
+      const existing = parsed.find(p => p.eventName === resolvedEvent);
+      if (existing) {
+        if (paramName && !existing.params.includes(paramName)) existing.params.push(paramName);
+      } else {
+        parsed.push({ eventName: resolvedEvent, params: paramName ? [paramName] : [] });
+      }
+    }
+    setSdrRows(parsed);
+    crossCheck(parsed);
+  };
+
+  const checkParam = (p) => !p || liveParams.has(p.toLowerCase()) || STANDARD_PARAMS.has(p.toLowerCase());
+
   const crossCheck = (rows) => {
     const checked = rows.map(r => {
-      const evtKey = r.eventName.toLowerCase();
-      const paramKey = r.paramName.toLowerCase();
-      const eventFound = liveEvents.has(evtKey);
-      // Params: check in custom dims OR it's a standard GA4 param
-      const standardParams = new Set(["page_title","page_location","page_path","session_id","engagement_time_msec","percent_scrolled","form_name","form_id","form_destination","link_url","link_text","file_name","video_title","search_term","currency","value","transaction_id","item_id","item_name","item_brand","item_category","item_variant","price","quantity","coupon","affiliation","shipping","tax","form_field_name"]);
-      const paramFound = !paramKey || liveParams.has(paramKey) || standardParams.has(paramKey);
-      const status = eventFound && paramFound ? "found" : !eventFound ? "missing_event" : "missing_param";
-      return { ...r, eventFound, paramFound, status };
+      const eventFound = liveEvents.has(r.eventName.toLowerCase());
+      const paramResults = r.params.map(p => ({
+        name: p,
+        found: checkParam(p),
+        isStandard: STANDARD_PARAMS.has(p.toLowerCase()),
+      }));
+      const allParamsOk = paramResults.every(p => p.found);
+      const status = eventFound && allParamsOk ? "found"
+        : !eventFound ? "missing_event" : "missing_param";
+      return { ...r, eventFound, paramResults, allParamsOk, status };
     });
     setResults(checked);
   };
 
   const addManual = () => {
     if (!manualEvent.trim()) return;
-    const newRow = { eventName: manualEvent.trim(), paramName: manualParam.trim() };
+    const params = manualParams.map(p => p.trim()).filter(Boolean);
+    const newRow = { eventName: manualEvent.trim(), params };
     const updated = [...manualRows, newRow];
     setManualRows(updated);
-    setManualEvent(""); setManualParam("");
+    setManualEvent(""); setManualParams([""]);
     crossCheck([...sdrRows, ...updated]);
   };
 
   const removeManual = (idx) => {
-    const updated = manualRows.filter((_,i)=>i!==idx);
+    const updated = manualRows.filter((_,i) => i !== idx);
     setManualRows(updated);
     crossCheck([...sdrRows, ...updated]);
   };
 
+  const addParamField = () => setManualParams(p => [...p, ""]);
+  const updateParamField = (idx, val) => setManualParams(p => p.map((v,i) => i===idx ? val : v));
+  const removeParamField = (idx) => setManualParams(p => p.filter((_,i) => i !== idx));
+
+  // ── Unique param stats ─────────────────────────────────────────────────
   const allRows = results.length > 0 ? results : [];
-  const foundCount   = allRows.filter(r=>r.status==="found").length;
-  const missingEvent = allRows.filter(r=>r.status==="missing_event").length;
-  const missingParam = allRows.filter(r=>r.status==="missing_param").length;
+  const foundCount    = allRows.filter(r => r.status === "found").length;
+  const missingEvent  = allRows.filter(r => r.status === "missing_event").length;
+  const missingParam  = allRows.filter(r => r.status === "missing_param").length;
+
+  // Count unique params across all events + how many times each appears
+  const paramCountMap = {};
+  allRows.forEach(r => {
+    r.params?.forEach(p => {
+      if (p) paramCountMap[p] = (paramCountMap[p] || 0) + 1;
+    });
+  });
+  const uniqueParams = Object.entries(paramCountMap).sort((a,b) => b[1]-a[1]);
+  const totalUniqueParams = uniqueParams.length;
+  const missingUniqueParams = uniqueParams.filter(([p]) =>
+    !checkParam(p)
+  ).length;
 
   if (!auditData) {
     return (
@@ -328,11 +390,63 @@ function SDRChecker({ auditData }) {
               onClick={()=>fileRef.current.click()}
             >
               <div style={{ fontSize:"28px", marginBottom:"10px" }}>📂</div>
-              <div style={{ fontWeight:700, fontSize:"14px", marginBottom:"4px" }}>Drop your SDR Excel here</div>
-              <div style={{ fontSize:"12px", color:BL.lightGrey }}>or click to browse · .xlsx, .xls supported</div>
+              <div style={{ fontWeight:700, fontSize:"14px", marginBottom:"4px" }}>
+                {fileName ? `✓ ${fileName}` : "Drop your SDR Excel here"}
+              </div>
+              <div style={{ fontSize:"12px", color:BL.lightGrey }}>
+                {fileName ? "Click to replace file" : "or click to browse · .xlsx, .xls supported"}
+              </div>
               <input ref={fileRef} type="file" accept=".xlsx,.xls" style={{display:"none"}}
                 onChange={e=>{if(e.target.files[0])parseExcel(e.target.files[0]);}}/>
             </div>
+
+            {/* Sheet picker — shown when file has multiple tabs */}
+            {sheetNames.length > 1 && (
+              <div style={{ marginTop:"16px" }}>
+                <label style={S.inputLabel}>
+                  Select Sheet / Tab
+                  <span style={{ color:BL.lightGrey, fontWeight:400, marginLeft:"8px", textTransform:"none", letterSpacing:0 }}>
+                    {sheetNames.length} sheets found in this file
+                  </span>
+                </label>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:"8px" }}>
+                  {sheetNames.map(name => (
+                    <button
+                      key={name}
+                      onClick={() => { setSelectedSheet(name); parseSheet(workbook, name); }}
+                      style={{
+                        padding:"7px 14px",
+                        borderRadius:"7px",
+                        border:`1px solid ${selectedSheet===name ? BL.yellow : BL.border}`,
+                        background: selectedSheet===name ? "rgba(255,212,38,0.12)" : "transparent",
+                        color: selectedSheet===name ? BL.yellow : BL.lightGrey,
+                        fontSize:"13px",
+                        fontWeight: selectedSheet===name ? 700 : 500,
+                        cursor:"pointer",
+                        fontFamily:"inherit",
+                        transition:"all 0.15s",
+                      }}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+                {!selectedSheet && (
+                  <div style={{ marginTop:"10px", fontSize:"12px", color:BL.warning }}>
+                    ⚠ Pick a sheet above to load its data
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Confirmation of what was parsed */}
+            {sdrRows.length > 0 && (
+              <div style={{ marginTop:"12px", fontSize:"12px", color:BL.success }}>
+                ✓ Loaded <strong>{sdrRows.length}</strong> rows from
+                {selectedSheet ? <strong> "{selectedSheet}"</strong> : " the sheet"}
+              </div>
+            )}
+
             <div style={{ marginTop:"14px", fontSize:"12px", color:BL.lightGrey, lineHeight:"1.6" }}>
               <strong style={{color:BL.white}}>Expected column names:</strong><br/>
               Column A → <code style={{color:BL.yellow}}>Events</code> &nbsp;|&nbsp;
@@ -349,36 +463,64 @@ function SDRChecker({ auditData }) {
             <span style={S.sectionCount}>{manualRows.length} added</span>
           </div>
           <div style={{ padding:"20px" }}>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:"10px", marginBottom:"16px", alignItems:"end" }}>
-              <div>
-                <label style={S.inputLabel}>Event Name</label>
-                <input style={S.input} placeholder="e.g. form_submit" value={manualEvent}
-                  onChange={e=>setManualEvent(e.target.value)}
-                  onKeyDown={e=>e.key==="Enter"&&addManual()}
-                  onFocus={e=>e.target.style.borderColor=BL.yellow}
-                  onBlur={e=>e.target.style.borderColor=BL.border}/>
-              </div>
-              <div>
-                <label style={S.inputLabel}>Parameter (optional)</label>
-                <input style={S.input} placeholder="e.g. form_name" value={manualParam}
-                  onChange={e=>setManualParam(e.target.value)}
-                  onKeyDown={e=>e.key==="Enter"&&addManual()}
-                  onFocus={e=>e.target.style.borderColor=BL.yellow}
-                  onBlur={e=>e.target.style.borderColor=BL.border}/>
-              </div>
-              <div style={{paddingTop:"19px"}}>
-                <button style={{...S.btnPrimary,width:"auto",padding:"10px 16px"}} onClick={addManual}>Add</button>
-              </div>
+            <div style={{ marginBottom:"12px" }}>
+              <label style={S.inputLabel}>Event Name</label>
+              <input style={S.input} placeholder="e.g. form_submit" value={manualEvent}
+                onChange={e=>setManualEvent(e.target.value)}
+                onFocus={e=>e.target.style.borderColor=BL.yellow}
+                onBlur={e=>e.target.style.borderColor=BL.border}/>
             </div>
+            <div style={{ marginBottom:"12px" }}>
+              <label style={S.inputLabel}>
+                Parameters
+                <span style={{ color:BL.lightGrey, fontWeight:400, marginLeft:"8px", textTransform:"none", letterSpacing:0 }}>
+                  add as many as needed
+                </span>
+              </label>
+              {manualParams.map((p, idx) => (
+                <div key={idx} style={{ display:"flex", gap:"8px", marginBottom:"8px" }}>
+                  <input
+                    style={{ ...S.input, flex:1 }}
+                    placeholder={`Parameter ${idx+1} e.g. form_name`}
+                    value={p}
+                    onChange={e => updateParamField(idx, e.target.value)}
+                    onKeyDown={e => { if(e.key==="Enter") addParamField(); }}
+                    onFocus={e=>e.target.style.borderColor=BL.yellow}
+                    onBlur={e=>e.target.style.borderColor=BL.border}
+                  />
+                  {manualParams.length > 1 && (
+                    <button onClick={()=>removeParamField(idx)}
+                      style={{ background:"none", border:`1px solid ${BL.border}`, color:BL.lightGrey, borderRadius:"8px", padding:"0 12px", cursor:"pointer", fontSize:"16px" }}>
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button onClick={addParamField} style={{ ...S.btnGhost, fontSize:"12px", padding:"6px 14px", marginTop:"4px" }}>
+                + Add another parameter
+              </button>
+            </div>
+            <div style={{ display:"flex", gap:"10px", marginTop:"4px" }}>
+              <button style={{ ...S.btnPrimary, width:"auto", padding:"10px 20px" }} onClick={addManual}>
+                Add Event
+              </button>
+            </div>
+
             {manualRows.length > 0 && (
-              <div style={{ maxHeight:"160px", overflowY:"auto" }}>
+              <div style={{ marginTop:"16px", maxHeight:"200px", overflowY:"auto" }}>
                 {manualRows.map((r,i) => (
-                  <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${BL.border}`, fontSize:"13px" }}>
-                    <span>
-                      <span style={{ color:BL.white, fontWeight:600 }}>{r.eventName}</span>
-                      {r.paramName && <span style={{ color:BL.lightGrey }}> · {r.paramName}</span>}
-                    </span>
-                    <button onClick={()=>removeManual(i)} style={{ background:"none", border:"none", color:BL.lightGrey, cursor:"pointer", fontSize:"16px" }}>×</button>
+                  <div key={i} style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"8px 0", borderBottom:`1px solid ${BL.border}`, fontSize:"13px" }}>
+                    <div>
+                      <span style={{ color:BL.white, fontWeight:700 }}>{r.eventName}</span>
+                      {r.params.length > 0 && (
+                        <div style={{ marginTop:"4px", display:"flex", flexWrap:"wrap", gap:"4px" }}>
+                          {r.params.map((p,pi) => (
+                            <span key={pi} style={{ ...S.pillNeutral, fontSize:"11px" }}>{p}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <button onClick={()=>removeManual(i)} style={{ background:"none", border:"none", color:BL.lightGrey, cursor:"pointer", fontSize:"16px", flexShrink:0 }}>×</button>
                   </div>
                 ))}
               </div>
@@ -391,11 +533,12 @@ function SDRChecker({ auditData }) {
       {allRows.length > 0 && (
         <>
           {/* Stats */}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"16px", marginBottom:"24px" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"16px", marginBottom:"24px" }}>
             {[
-              { label:"Events Found in GA4", value:foundCount, color:BL.success },
-              { label:"Events Not in GA4", value:missingEvent, color:BL.danger },
-              { label:"Params Not Registered", value:missingParam, color:BL.warning },
+              { label:"Events Found in GA4",     value:foundCount,          color:BL.success },
+              { label:"Events Not in GA4",        value:missingEvent,        color:BL.danger  },
+              { label:"Params Not Registered",    value:missingParam,        color:BL.warning },
+              { label:"Unique Parameters (SDR)",  value:totalUniqueParams,   color:BL.info    },
             ].map((k,i) => (
               <div key={i} style={S.kpiCard}>
                 <div style={{...S.kpiAccent,background:k.color}}/>
@@ -406,24 +549,24 @@ function SDRChecker({ auditData }) {
           </div>
 
           <div style={S.infoBox}>
-            ⓘ Events are matched against your live GA4 event inventory. Parameters are checked against your registered Custom Dimensions and standard GA4 parameters (page_title, form_name, etc.).
+            ⓘ Events matched against live GA4 inventory. Parameters checked against registered Custom Dimensions and all standard GA4 parameters. Standard params (page_title, form_name, currency etc.) are always marked as registered.
           </div>
 
-          {/* Results Table */}
+          {/* Results Table — one row per event with all params inline */}
           <div style={S.section}>
             <div style={S.sectionHeader}>
               <span style={S.sectionTitle}>Cross-Check Results</span>
-              <span style={S.sectionCount}>{allRows.length} rows checked</span>
+              <span style={S.sectionCount}>{allRows.length} events checked</span>
             </div>
             <div style={S.tableWrap}>
               <table style={S.table}>
                 <thead>
                   <tr>
                     <th style={S.th}>Event Name</th>
-                    <th style={S.th}>Parameter</th>
+                    <th style={S.th}>Parameters</th>
                     <th style={S.th}>Event in GA4</th>
-                    <th style={S.th}>Param Registered</th>
-                    <th style={S.th}>Status</th>
+                    <th style={S.th}>Params Status</th>
+                    <th style={S.th}>Overall</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -432,26 +575,43 @@ function SDRChecker({ auditData }) {
                       onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.03)"}
                       onMouseLeave={e=>e.currentTarget.style.background="transparent"}
                     >
-                      <td style={S.td}><span style={{ fontFamily:"monospace", fontSize:"12px", color:BL.white }}>{r.eventName}</span></td>
-                      <td style={S.td}><span style={{ fontFamily:"monospace", fontSize:"12px", color:BL.lightGrey }}>{r.paramName || "—"}</span></td>
+                      <td style={S.td}>
+                        <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:BL.white }}>{r.eventName}</span>
+                      </td>
+                      <td style={S.td}>
+                        {r.params?.length > 0 ? (
+                          <div style={{ display:"flex", flexWrap:"wrap", gap:"4px" }}>
+                            {r.paramResults.map((p,pi) => (
+                              <span key={pi} style={{
+                                fontFamily:"monospace", fontSize:"11px", padding:"2px 8px", borderRadius:"4px",
+                                background: p.found ? "rgba(0,200,150,0.1)" : "rgba(255,152,0,0.1)",
+                                color: p.found ? BL.success : BL.warning,
+                                border: `1px solid ${p.found ? "rgba(0,200,150,0.3)" : "rgba(255,152,0,0.3)"}`,
+                              }}>
+                                {p.name}{p.isStandard ? " ⓘ" : ""}
+                              </span>
+                            ))}
+                          </div>
+                        ) : <span style={{ color:BL.lightGrey, fontSize:"12px" }}>—</span>}
+                      </td>
                       <td style={S.td}>
                         {r.eventFound
                           ? <span style={S.pill(true)}>✓ Found</span>
                           : <span style={S.pill(false)}>✗ Not found</span>}
                       </td>
                       <td style={S.td}>
-                        {!r.paramName
+                        {r.params?.length === 0
                           ? <span style={S.pillNeutral}>— N/A</span>
-                          : r.paramFound
-                          ? <span style={S.pill(true)}>✓ Registered</span>
-                          : <span style={S.pillWarning}>⚠ Not registered</span>}
+                          : r.allParamsOk
+                          ? <span style={S.pill(true)}>✓ All registered</span>
+                          : <span style={S.pillWarning}>⚠ {r.paramResults.filter(p=>!p.found).length} missing</span>}
                       </td>
                       <td style={S.td}>
                         {r.status==="found"
                           ? <span style={S.pill(true)}>✓ All good</span>
                           : r.status==="missing_event"
                           ? <span style={S.pill(false)}>✗ Event missing</span>
-                          : <span style={S.pillWarning}>⚠ Param missing</span>}
+                          : <span style={S.pillWarning}>⚠ Param issue</span>}
                       </td>
                     </tr>
                   ))}
@@ -459,6 +619,69 @@ function SDRChecker({ auditData }) {
               </table>
             </div>
           </div>
+
+          {/* Unique Parameters Summary */}
+          {uniqueParams.length > 0 && (
+            <div style={S.section}>
+              <div style={S.sectionHeader}>
+                <span style={S.sectionTitle}>Unique Parameters in SDR</span>
+                <div style={{ display:"flex", gap:"8px" }}>
+                  <span style={{ ...S.sectionCount, background:"rgba(0,200,150,0.12)", color:BL.success }}>
+                    {uniqueParams.length - missingUniqueParams} registered
+                  </span>
+                  {missingUniqueParams > 0 && (
+                    <span style={{ ...S.sectionCount, background:"rgba(255,152,0,0.12)", color:BL.warning }}>
+                      {missingUniqueParams} not registered
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div style={S.tableWrap}>
+                <table style={S.table}>
+                  <thead>
+                    <tr>
+                      <th style={S.th}>Parameter Name</th>
+                      <th style={S.th}>Used in # Events</th>
+                      <th style={S.th}>Type</th>
+                      <th style={S.th}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {uniqueParams.map(([param, count], i) => {
+                      const found = checkParam(param);
+                      const isStd = STANDARD_PARAMS.has(param.toLowerCase());
+                      const isCustom = liveParams.has(param.toLowerCase());
+                      return (
+                        <tr key={i}
+                          onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.03)"}
+                          onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+                        >
+                          <td style={S.td}>
+                            <span style={{ fontFamily:"monospace", fontSize:"12px", color:BL.white, fontWeight:600 }}>{param}</span>
+                          </td>
+                          <td style={S.td}>
+                            <span style={{ ...S.sectionCount, fontSize:"12px" }}>{count} event{count>1?"s":""}</span>
+                          </td>
+                          <td style={S.td}>
+                            {isStd
+                              ? <span style={S.pillNeutral}>Standard GA4</span>
+                              : isCustom
+                              ? <span style={{ ...S.pillNeutral, color:BL.info, background:"rgba(74,158,255,0.1)" }}>Custom Dim</span>
+                              : <span style={{ ...S.pillNeutral, color:BL.warning, background:"rgba(255,152,0,0.1)" }}>Unknown</span>}
+                          </td>
+                          <td style={S.td}>
+                            {found
+                              ? <span style={S.pill(true)}>✓ Registered</span>
+                              : <span style={S.pillWarning}>⚠ Not registered</span>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </>
       )}
 
