@@ -22,11 +22,11 @@ const S = {
   root: { fontFamily:"'DM Sans','Helvetica Neue',Arial,sans-serif", background:BL.black, minHeight:"100vh", color:"#1a1200" },
   topbar: { background:BL.darkGrey, borderBottom:`1px solid ${BL.border}`, padding:"0 32px", height:"64px", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 },
   logo: { display:"flex", alignItems:"center", gap:"10px", fontWeight:800, fontSize:"18px", letterSpacing:"-0.5px" },
-  logoMark: { background:BL.yellow, color:BL.black, fontWeight:900, fontSize:"13px", padding:"4px 8px", borderRadius:"4px", letterSpacing:"0.5px" },
+  logoMark: { background:"#ffdd33", color:"#1a1200", fontWeight:900, fontSize:"13px", padding:"4px 8px", borderRadius:"4px", letterSpacing:"0.5px" },
   badge: { background:BL.midGrey, color:BL.lightGrey, fontSize:"11px", padding:"3px 10px", borderRadius:"20px", fontWeight:500 },
   main: { maxWidth:"1280px", margin:"0 auto", padding:"40px 24px" },
   tabs: { display:"flex", gap:"4px", marginBottom:"32px", background:BL.darkGrey, padding:"4px", borderRadius:"10px", border:`1px solid ${BL.border}`, width:"fit-content" },
-  tab: (active) => ({ padding:"8px 20px", borderRadius:"7px", fontSize:"13px", fontWeight:700, cursor:"pointer", border:"none", fontFamily:"inherit", background:active?BL.yellow:"transparent", color:active?BL.black:BL.lightGrey, transition:"all 0.15s" }),
+  tab: (active) => ({ padding:"8px 20px", borderRadius:"7px", fontSize:"13px", fontWeight:700, cursor:"pointer", border:"none", fontFamily:"inherit", background:active?"#ffdd33":"transparent", color:active?"#1a1200":"#7a6f00", transition:"all 0.15s" }),
   loginWrap: { display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"80vh" },
   loginCard: { background:BL.darkGrey, border:`1px solid ${BL.border}`, borderRadius:"16px", padding:"48px 48px 40px", maxWidth:"440px", width:"100%", textAlign:"center" },
   loginTitle: { fontSize:"26px", fontWeight:800, letterSpacing:"-0.8px", marginBottom:"8px" },
@@ -38,9 +38,9 @@ const S = {
   inputLabel: { fontSize:"11px", fontWeight:700, textTransform:"uppercase", letterSpacing:"1px", color:BL.lightGrey, marginBottom:"8px", display:"block" },
   input: { background:BL.black, border:`1px solid ${BL.border}`, borderRadius:"8px", color:"#1a1200", padding:"10px 14px", fontSize:"14px", width:"100%", outline:"none", fontFamily:"inherit" },
   select: { background:BL.black, border:`1px solid ${BL.border}`, borderRadius:"8px", color:"#1a1200", padding:"10px 36px 10px 14px", fontSize:"14px", width:"100%", outline:"none", cursor:"pointer", fontFamily:"inherit", appearance:"none", backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239A9A9A' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat:"no-repeat", backgroundPosition:"right 14px center" },
-  btnPrimary: { background:BL.yellow, color:BL.black, border:"none", borderRadius:"8px", padding:"11px 24px", fontWeight:800, fontSize:"14px", cursor:"pointer", fontFamily:"inherit", letterSpacing:"-0.2px", width:"100%" },
+  btnPrimary: { background:"#ffdd33", color:"#1a1200", border:"none", borderRadius:"8px", padding:"11px 24px", fontWeight:800, fontSize:"14px", cursor:"pointer", fontFamily:"inherit", letterSpacing:"-0.2px", width:"100%" },
   btnGhost: { background:"transparent", color:BL.lightGrey, border:`1px solid ${BL.border}`, borderRadius:"8px", padding:"8px 16px", fontWeight:600, fontSize:"13px", cursor:"pointer", fontFamily:"inherit" },
-  btnOutline: { background:"transparent", color:BL.yellow, border:`1px solid ${BL.yellow}`, borderRadius:"8px", padding:"9px 18px", fontWeight:700, fontSize:"13px", cursor:"pointer", fontFamily:"inherit", letterSpacing:"-0.2px" },
+  btnOutline: { background:"#ffdd33", color:"#1a1200", border:"1px solid #c8b800", borderRadius:"8px", padding:"9px 18px", fontWeight:700, fontSize:"13px", cursor:"pointer", fontFamily:"inherit", letterSpacing:"-0.2px" },
   kpiGrid: { display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:"16px", marginBottom:"32px" },
   kpiCard: { background:BL.darkGrey, border:`1px solid ${BL.border}`, borderRadius:"12px", padding:"20px 20px 20px 24px", position:"relative", overflow:"hidden" },
   kpiAccent: { position:"absolute", top:0, left:0, width:"3px", height:"100%" },
@@ -284,8 +284,8 @@ function DragChip({ item, onRemove, draggable, onDragStart }) {
       style={{
         display:"inline-flex", alignItems:"center", gap:"6px",
         padding:"5px 10px 5px 12px", borderRadius:"6px",
-        background:"rgba(255,212,38,0.1)", border:`1px solid rgba(255,212,38,0.3)`,
-        color:BL.yellow, fontSize:"12px", fontWeight:600,
+        background:"#ffdd33", border:"1px solid #c8b800",
+        color:"#1a1200", fontSize:"12px", fontWeight:700,
         cursor:draggable?"grab":"default", userSelect:"none",
         fontFamily:"'DM Sans',sans-serif",
       }}
@@ -1428,7 +1428,7 @@ export default function App() {
         ::-webkit-scrollbar-track{background:#f5f0d0;}
         ::-webkit-scrollbar-thumb{background:#c8b800;border-radius:3px;}
         option{background:#fffceb;color:#1a1200;}
-        code{background:rgba(255,221,51,0.2);color:#7a6f00;padding:1px 5px;border-radius:3px;font-size:11px;}
+        code{background:rgba(200,184,0,0.15);color:#1a1200;font-weight:600;padding:1px 5px;border-radius:3px;font-size:11px;border:1px solid rgba(200,184,0,0.3);}
       `}</style>
       <div style={S.root}>
 
@@ -1623,18 +1623,18 @@ export default function App() {
                   {data["Unassigned Traffic Details"]?.length>0&&<AuditSection title="Unassigned Traffic Details"><CheckResultTable entries={data["Unassigned Traffic Details"]}/></AuditSection>}
                   {data["Unassigned Source/Medium Data"]?.length>0&&<AuditSection title="Unassigned Source/Medium Breakdown" count={data["Unassigned Source/Medium Data"].length}><AuditTable columns={["Channel Group","Source","Medium","Sessions"]} rows={data["Unassigned Source/Medium Data"].slice(0,15).map(e=>[e["Channel Group"],e.Source,e.Medium,e.Sessions])}/></AuditSection>}
                   <div style={{display:"flex",justifyContent:"center",gap:"12px",marginTop:"40px",paddingBottom:"48px",flexWrap:"wrap"}}>
-                    <button style={{...S.btnPrimary,width:"auto",padding:"13px 32px",fontSize:"14px",opacity:loading?0.5:1}}
+                    <button style={{...S.btnPrimary,width:"auto",padding:"13px 32px",fontSize:"14px",color:"#1a1200",opacity:loading?0.5:1}}
                       onClick={handleDownloadPdf} disabled={loading}>
                       {loading?"Generating…":"⬇ Download PDF"}
                     </button>
                     <button
                       style={{...S.btnPrimary,width:"auto",padding:"13px 32px",fontSize:"14px",
-                        background:"00C896",opacity:exportingXlsx?0.5:1}}
+                        background:"#ffdd33",color:"#1a1200",opacity:exportingXlsx?0.5:1}}
                       onClick={handleExportXlsx} disabled={exportingXlsx}>
                       {exportingXlsx?"Exporting…":"⬇ Export to Excel"}
                     </button>
                     <button
-                      style={{...S.btnOutline,padding:"13px 32px",fontSize:"14px",
+                      style={{...S.btnOutline,padding:"13px 32px",fontSize:"14px",color:"#1a1200",
                         opacity:exportingPptx?0.5:1}}
                       onClick={handleExportPptx} disabled={exportingPptx}>
                       {exportingPptx?"Generating…":"⬇ Export to PPTX"}
