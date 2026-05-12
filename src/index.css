@@ -4,9 +4,9 @@
   font-family: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: dark;
-  color: #ffffff;
-  background-color: #0A0A0A;
+  color-scheme: light;
+  color: #1a1200;
+  background-color: #fffceb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -21,18 +21,19 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #0A0A0A;
+  background: #fffceb;
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #1A1A1A; }
-::-webkit-scrollbar-thumb { background: #3D3D3D; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #555; }
+::selection {
+  background: rgba(255, 221, 51, 0.4);
+  color: #1a1200;
+}
 
-/* Selection */
-::selection { background: rgba(255, 212, 38, 0.25); color: #fff; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f5f0d0; }
+::-webkit-scrollbar-thumb { background: #c8b800; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a89a00; }

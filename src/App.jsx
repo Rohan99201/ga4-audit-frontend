@@ -5,13 +5,13 @@ import * as XLSX from "xlsx";
 const API = import.meta.env.VITE_API_URL || "https://ga4-audit-backend.onrender.com";
 
 const BL = {
-  yellow:    "#FFD426",
-  black:     "#0A0A0A",
+  yellow:    "#ffdd33",
+  black:     "#fffceb",
   white:     "#FFFFFF",
-  darkGrey:  "#1A1A1A",
-  midGrey:   "#3D3D3D",
-  lightGrey: "#9A9A9A",
-  border:    "#2A2A2A",
+  darkGrey:  "#f5f0d0",
+  midGrey:   "#c8b800",
+  lightGrey: "#7a6f00",
+  border:    "#e8e0b0",
   danger:    "#FF4444",
   warning:   "#FF9800",
   success:   "#00C896",
@@ -19,7 +19,7 @@ const BL = {
 };
 
 const S = {
-  root: { fontFamily:"'DM Sans','Helvetica Neue',Arial,sans-serif", background:BL.black, minHeight:"100vh", color:BL.white },
+  root: { fontFamily:"'DM Sans','Helvetica Neue',Arial,sans-serif", background:BL.black, minHeight:"100vh", color:"#1a1200" },
   topbar: { background:BL.darkGrey, borderBottom:`1px solid ${BL.border}`, padding:"0 32px", height:"64px", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 },
   logo: { display:"flex", alignItems:"center", gap:"10px", fontWeight:800, fontSize:"18px", letterSpacing:"-0.5px" },
   logoMark: { background:BL.yellow, color:BL.black, fontWeight:900, fontSize:"13px", padding:"4px 8px", borderRadius:"4px", letterSpacing:"0.5px" },
@@ -31,13 +31,13 @@ const S = {
   loginCard: { background:BL.darkGrey, border:`1px solid ${BL.border}`, borderRadius:"16px", padding:"48px 48px 40px", maxWidth:"440px", width:"100%", textAlign:"center" },
   loginTitle: { fontSize:"26px", fontWeight:800, letterSpacing:"-0.8px", marginBottom:"8px" },
   loginSub: { color:BL.lightGrey, fontSize:"14px", marginBottom:"36px", lineHeight:"1.6" },
-  googleBtn: { display:"flex", alignItems:"center", justifyContent:"center", gap:"12px", background:BL.white, color:"#1A1A1A", border:"none", borderRadius:"10px", padding:"13px 24px", fontWeight:700, fontSize:"15px", cursor:"pointer", fontFamily:"inherit", width:"100%", letterSpacing:"-0.2px" },
+  googleBtn: { display:"flex", alignItems:"center", justifyContent:"center", gap:"12px", background:BL.white, color:"#f5f0d0", border:"none", borderRadius:"10px", padding:"13px 24px", fontWeight:700, fontSize:"15px", cursor:"pointer", fontFamily:"inherit", width:"100%", letterSpacing:"-0.2px" },
   divider: { borderTop:`1px solid ${BL.border}`, margin:"28px 0" },
   loginFooter: { fontSize:"12px", color:BL.lightGrey, lineHeight:"1.6" },
   inputPanel: { background:BL.darkGrey, border:`1px solid ${BL.border}`, borderRadius:"12px", padding:"24px", marginBottom:"32px" },
   inputLabel: { fontSize:"11px", fontWeight:700, textTransform:"uppercase", letterSpacing:"1px", color:BL.lightGrey, marginBottom:"8px", display:"block" },
-  input: { background:BL.black, border:`1px solid ${BL.border}`, borderRadius:"8px", color:BL.white, padding:"10px 14px", fontSize:"14px", width:"100%", outline:"none", fontFamily:"inherit" },
-  select: { background:BL.black, border:`1px solid ${BL.border}`, borderRadius:"8px", color:BL.white, padding:"10px 36px 10px 14px", fontSize:"14px", width:"100%", outline:"none", cursor:"pointer", fontFamily:"inherit", appearance:"none", backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239A9A9A' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat:"no-repeat", backgroundPosition:"right 14px center" },
+  input: { background:BL.black, border:`1px solid ${BL.border}`, borderRadius:"8px", color:"#1a1200", padding:"10px 14px", fontSize:"14px", width:"100%", outline:"none", fontFamily:"inherit" },
+  select: { background:BL.black, border:`1px solid ${BL.border}`, borderRadius:"8px", color:"#1a1200", padding:"10px 36px 10px 14px", fontSize:"14px", width:"100%", outline:"none", cursor:"pointer", fontFamily:"inherit", appearance:"none", backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239A9A9A' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundRepeat:"no-repeat", backgroundPosition:"right 14px center" },
   btnPrimary: { background:BL.yellow, color:BL.black, border:"none", borderRadius:"8px", padding:"11px 24px", fontWeight:800, fontSize:"14px", cursor:"pointer", fontFamily:"inherit", letterSpacing:"-0.2px", width:"100%" },
   btnGhost: { background:"transparent", color:BL.lightGrey, border:`1px solid ${BL.border}`, borderRadius:"8px", padding:"8px 16px", fontWeight:600, fontSize:"13px", cursor:"pointer", fontFamily:"inherit" },
   btnOutline: { background:"transparent", color:BL.yellow, border:`1px solid ${BL.yellow}`, borderRadius:"8px", padding:"9px 18px", fontWeight:700, fontSize:"13px", cursor:"pointer", fontFamily:"inherit", letterSpacing:"-0.2px" },
@@ -46,8 +46,8 @@ const S = {
   kpiAccent: { position:"absolute", top:0, left:0, width:"3px", height:"100%" },
   kpiLabel: { fontSize:"11px", fontWeight:700, textTransform:"uppercase", letterSpacing:"1px", color:BL.lightGrey, marginBottom:"8px" },
   kpiValue: { fontSize:"26px", fontWeight:800, letterSpacing:"-1px", lineHeight:1 },
-  summaryCard: (t) => ({ background:t==="error"?"rgba(255,68,68,0.08)":t==="warning"?"rgba(255,152,0,0.08)":"rgba(0,200,150,0.08)", border:`1px solid ${t==="error"?"rgba(255,68,68,0.3)":t==="warning"?"rgba(255,152,0,0.3)":"rgba(0,200,150,0.3)"}`, borderRadius:"10px", padding:"14px 18px", display:"flex", alignItems:"flex-start", gap:"12px", marginBottom:"10px" }),
-  summaryIcon: (t) => ({ width:"22px", height:"22px", borderRadius:"50%", background:t==="error"?BL.danger:t==="warning"?BL.warning:BL.success, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"12px", flexShrink:0, marginTop:"1px", color:BL.white, fontWeight:700 }),
+  summaryCard: (t) => ({ background:t==="error"?"rgba(204,34,0,0.08)":t==="warning"?"rgba(204,102,0,0.08)":"rgba(0,122,92,0.08)", border:`1px solid ${t==="error"?"rgba(204,34,0,0.3)":t==="warning"?"rgba(204,102,0,0.3)":"rgba(0,122,92,0.3)"}`, borderRadius:"10px", padding:"14px 18px", display:"flex", alignItems:"flex-start", gap:"12px", marginBottom:"10px" }),
+  summaryIcon: (t) => ({ width:"22px", height:"22px", borderRadius:"50%", background:t==="error"?BL.danger:t==="warning"?BL.warning:BL.success, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"12px", flexShrink:0, marginTop:"1px", color:"#1a1200", fontWeight:700 }),
   section: { background:BL.darkGrey, border:`1px solid ${BL.border}`, borderRadius:"12px", marginBottom:"20px", overflow:"hidden" },
   sectionHeader: { padding:"16px 20px", borderBottom:`1px solid ${BL.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" },
   sectionTitle: { fontWeight:700, fontSize:"15px", letterSpacing:"-0.3px" },
@@ -55,8 +55,8 @@ const S = {
   tableWrap: { overflowX:"auto" },
   table: { width:"100%", borderCollapse:"collapse", fontSize:"13px" },
   th: { padding:"10px 16px", textAlign:"left", fontSize:"11px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.8px", color:BL.lightGrey, background:"rgba(255,255,255,0.03)", borderBottom:`1px solid ${BL.border}`, whiteSpace:"nowrap" },
-  td: { padding:"11px 16px", borderBottom:`1px solid ${BL.border}`, color:BL.white, verticalAlign:"middle", lineHeight:"1.4" },
-  pill: (ok) => ({ display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:ok?"rgba(0,200,150,0.12)":"rgba(255,68,68,0.12)", color:ok?BL.success:BL.danger }),
+  td: { padding:"11px 16px", borderBottom:`1px solid ${BL.border}`, color:"#1a1200", verticalAlign:"middle", lineHeight:"1.4" },
+  pill: (ok) => ({ display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:ok?"rgba(0,122,92,0.12)":"rgba(204,34,0,0.12)", color:ok?BL.success:BL.danger }),
   pillWarning: { display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:"rgba(255,152,0,0.12)", color:BL.warning },
   pillNeutral: { display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:"rgba(255,255,255,0.06)", color:BL.lightGrey },
   errorBox: { background:"rgba(255,68,68,0.08)", border:`1px solid rgba(255,68,68,0.3)`, borderRadius:"10px", padding:"16px 20px", color:BL.danger, fontSize:"14px", marginBottom:"24px" },
@@ -412,7 +412,7 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate, customDims 
   if (!selectedProp) return (
     <div style={{padding:"60px 0",textAlign:"center",color:BL.lightGrey}}>
       <div style={{fontSize:"32px",marginBottom:"12px"}}>📊</div>
-      <div style={{fontSize:"15px",fontWeight:600,marginBottom:"8px",color:BL.white}}>Select a property first</div>
+      <div style={{fontSize:"15px",fontWeight:600,marginBottom:"8px",color:"#1a1200"}}>Select a property first</div>
       <div style={{fontSize:"13px"}}>Choose a GA4 property from the dropdown above to use the Data Explorer.</div>
     </div>
   );
@@ -522,7 +522,7 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate, customDims 
                         <div key={i} style={{display:"inline-flex",alignItems:"center",gap:"6px",padding:"4px 10px",borderRadius:"6px",background:"rgba(74,158,255,0.1)",border:`1px solid rgba(74,158,255,0.3)`,fontSize:"12px",color:BL.info}}>
                           <span style={{fontWeight:700}}>{dimMeta?.label||f.dimension}</span>
                           <span style={{color:BL.lightGrey}}>{MATCH_TYPES.find(t=>t.id===f.matchType)?.label}</span>
-                          <span style={{color:BL.white,fontFamily:"monospace"}}>"{f.value}"</span>
+                          <span style={{color:"#1a1200",fontFamily:"monospace"}}>"{f.value}"</span>
                           <span onClick={()=>removeFilter(i)} style={{cursor:"pointer",color:"rgba(74,158,255,0.6)",fontSize:"14px"}}>×</span>
                         </div>
                       );
@@ -614,7 +614,7 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate, customDims 
                       <tr key={i} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.03)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                         <td style={{...S.td,color:BL.midGrey,textAlign:"center",fontSize:"11px"}}>{i+1}</td>
                         {results.dimensions.map(d=><td key={d} style={S.td}>{row[d]||<span style={{color:BL.midGrey}}>(not set)</span>}</td>)}
-                        {results.metrics.map(m=><td key={m} style={S.td}><span style={{fontWeight:600,color:BL.white}}>{parseFloat(row[m])%1===0?parseInt(row[m]).toLocaleString():parseFloat(row[m]).toFixed(2)}</span></td>)}
+                        {results.metrics.map(m=><td key={m} style={S.td}><span style={{fontWeight:600,color:"#1a1200"}}>{parseFloat(row[m])%1===0?parseInt(row[m]).toLocaleString():parseFloat(row[m]).toFixed(2)}</span></td>)}
                       </tr>
                     ))}
                   </tbody>
@@ -625,13 +625,13 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate, customDims 
           {results&&results.rows.length===0&&<div style={{...S.infoBox,textAlign:"center"}}>No data for this combination. Try a different date range, dimensions, or filters.</div>}
           {!results&&!loadingExplore&&(selectedDims.length>0||selectedMetrics.length>0)&&(
             <div style={{padding:"32px",textAlign:"center",color:BL.lightGrey,fontSize:"13px",border:`1px dashed ${BL.border}`,borderRadius:"10px"}}>
-              Hit <strong style={{color:BL.white}}>Run Report</strong> to query GA4 with your selected fields.
+              Hit <strong style={{color:"#1a1200"}}>Run Report</strong> to query GA4 with your selected fields.
             </div>
           )}
           {selectedDims.length===0&&selectedMetrics.length===0&&!results&&(
             <div style={{padding:"40px",textAlign:"center",color:BL.lightGrey}}>
               <div style={{fontSize:"28px",marginBottom:"10px"}}>🧩</div>
-              <div style={{fontSize:"14px",fontWeight:600,color:BL.white,marginBottom:"6px"}}>Build your report</div>
+              <div style={{fontSize:"14px",fontWeight:600,color:"#1a1200",marginBottom:"6px"}}>Build your report</div>
               <div style={{fontSize:"13px"}}>Click or drag dimensions and metrics from the left panel to get started.</div>
             </div>
           )}
@@ -849,7 +849,7 @@ function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) 
     return (
       <div style={{ padding:"60px 0", textAlign:"center", color:BL.lightGrey }}>
         <div style={{ fontSize:"32px", marginBottom:"12px" }}>📋</div>
-        <div style={{ fontSize:"15px", fontWeight:600, marginBottom:"8px", color:BL.white }}>Run an audit first</div>
+        <div style={{ fontSize:"15px", fontWeight:600, marginBottom:"8px", color:"#1a1200" }}>Run an audit first</div>
         <div style={{ fontSize:"13px" }}>Select a GA4 property and run the audit to enable SDR cross-checking.</div>
       </div>
     );
@@ -939,7 +939,7 @@ function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) 
             )}
 
             <div style={{ marginTop:"14px", fontSize:"12px", color:BL.lightGrey, lineHeight:"1.6" }}>
-              <strong style={{color:BL.white}}>Expected column names:</strong><br/>
+              <strong style={{color:"#1a1200"}}>Expected column names:</strong><br/>
               Column A → <code style={{color:BL.yellow}}>Events</code> &nbsp;|&nbsp;
               Column C → <code style={{color:BL.yellow}}>Event Parameters</code><br/>
               Matches your current SDR layout automatically.
@@ -1002,7 +1002,7 @@ function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) 
                 {manualRows.map((r,i) => (
                   <div key={i} style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"8px 0", borderBottom:`1px solid ${BL.border}`, fontSize:"13px" }}>
                     <div>
-                      <span style={{ color:BL.white, fontWeight:700 }}>{r.eventName}</span>
+                      <span style={{ color:"#1a1200", fontWeight:700 }}>{r.eventName}</span>
                       {r.params.length > 0 && (
                         <div style={{ marginTop:"4px", display:"flex", flexWrap:"wrap", gap:"4px" }}>
                           {r.params.map((p,pi) => (
@@ -1067,7 +1067,7 @@ function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) 
                       onMouseLeave={e=>e.currentTarget.style.background="transparent"}
                     >
                       <td style={S.td}>
-                        <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:BL.white }}>{r.eventName}</span>
+                        <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:"#1a1200" }}>{r.eventName}</span>
                       </td>
                       <td style={S.td}>
                         {r.params?.length > 0 ? (
@@ -1148,7 +1148,7 @@ function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) 
                           onMouseLeave={e=>e.currentTarget.style.background="transparent"}
                         >
                           <td style={S.td}>
-                            <span style={{ fontFamily:"monospace", fontSize:"12px", color:BL.white, fontWeight:600 }}>{param}</span>
+                            <span style={{ fontFamily:"monospace", fontSize:"12px", color:"#1a1200", fontWeight:600 }}>{param}</span>
                           </td>
                           <td style={S.td}>
                             <span style={{ ...S.sectionCount, fontSize:"12px" }}>{count} event{count>1?"s":""}</span>
@@ -1231,7 +1231,7 @@ function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) 
                         onMouseLeave={e=>e.currentTarget.style.background="transparent"}
                       >
                         <td style={S.td}>
-                          <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:BL.white }}>{row.eventName}</span>
+                          <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:"#1a1200" }}>{row.eventName}</span>
                         </td>
                         <td style={S.td}>
                           {row.inGA4 ? <span style={S.pill(true)}>✓ Found</span> : <span style={S.pill(false)}>✗ Not found</span>}
@@ -1396,7 +1396,7 @@ export default function App() {
     if (!reportRef.current) return;
     setLoading(true);
     try {
-      const canvas = await html2canvas(reportRef.current,{scale:2,backgroundColor:"#0A0A0A"});
+      const canvas = await html2canvas(reportRef.current,{scale:2,backgroundColor:"#fffceb"});
       const imgData = canvas.toDataURL("image/png");
       const pdf = new window.jspdf.jsPDF("p","mm","a4");
       const imgW=210,pageH=297,imgH=canvas.height*imgW/canvas.width;
@@ -1422,13 +1422,13 @@ export default function App() {
         @keyframes spin{to{transform:rotate(360deg);}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
         .fade-in{animation:fadeIn 0.35s ease forwards;}
-        input:focus,select:focus{border-color:#FFD426!important;box-shadow:0 0 0 3px rgba(255,212,38,0.15);}
+        input:focus,select:focus{border-color:#ffdd33!important;box-shadow:0 0 0 3px rgba(255,221,51,0.25);}
         tr:last-child td{border-bottom:none!important;}
         ::-webkit-scrollbar{width:6px;height:6px;}
-        ::-webkit-scrollbar-track{background:#1A1A1A;}
-        ::-webkit-scrollbar-thumb{background:#3D3D3D;border-radius:3px;}
-        option{background:#1A1A1A;color:#fff;}
-        code{background:rgba(255,212,38,0.1);padding:1px 5px;border-radius:3px;font-size:11px;}
+        ::-webkit-scrollbar-track{background:#f5f0d0;}
+        ::-webkit-scrollbar-thumb{background:#c8b800;border-radius:3px;}
+        option{background:#fffceb;color:#1a1200;}
+        code{background:rgba(255,221,51,0.2);color:#7a6f00;padding:1px 5px;border-radius:3px;font-size:11px;}
       `}</style>
       <div style={S.root}>
 
@@ -1448,7 +1448,7 @@ export default function App() {
               <div style={S.userChip}>
                 {user.picture?<img src={user.picture} alt="" style={S.avatar} referrerPolicy="no-referrer"/>
                   :<div style={S.avatarFallback}>{user.name?.[0]??"U"}</div>}
-                <span style={{fontSize:"13px",fontWeight:600,color:BL.white}}>{user.name?.split(" ")[0]}</span>
+                <span style={{fontSize:"13px",fontWeight:600,color:"#1a1200"}}>{user.name?.split(" ")[0]}</span>
                 <button onClick={handleLogout} style={{...S.btnGhost,padding:"4px 10px",fontSize:"12px",marginLeft:"4px"}}>Sign out</button>
               </div>
             )}
@@ -1500,8 +1500,8 @@ export default function App() {
                 </div>
                 {selectedProp&&(
                   <div style={{marginTop:"12px",fontSize:"12px",color:BL.lightGrey}}>
-                    Auditing: <span style={{color:BL.white,fontWeight:600}}>{selectedPropName}</span>
-                    {" · "}Range: <span style={{color:BL.white}}>{startDate||"30daysAgo"} → {endDate||"today"}</span>
+                    Auditing: <span style={{color:"#1a1200",fontWeight:600}}>{selectedPropName}</span>
+                    {" · "}Range: <span style={{color:"#1a1200"}}>{startDate||"30daysAgo"} → {endDate||"today"}</span>
                   </div>
                 )}
               </div>
@@ -1652,7 +1652,7 @@ export default function App() {
               {activeTab==="audit"&&!data&&!loading&&(
                 <div style={{padding:"60px 0",textAlign:"center",color:BL.lightGrey}}>
                   <div style={{fontSize:"32px",marginBottom:"12px"}}>🔍</div>
-                  <div style={{fontSize:"15px",fontWeight:600,marginBottom:"8px",color:BL.white}}>Ready to audit</div>
+                  <div style={{fontSize:"15px",fontWeight:600,marginBottom:"8px",color:"#1a1200"}}>Ready to audit</div>
                   <div style={{fontSize:"13px"}}>Select a property above and hit Run Audit to get started.</div>
                 </div>
               )}
