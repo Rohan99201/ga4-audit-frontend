@@ -201,29 +201,32 @@ function LoginScreen() {
 }
 
 // ── SDR Checker Tab ────────────────────────────────────────────────────────
-function SDRChecker({ auditData }) {
-  const [sdrRows, setSdrRows]       = useState([]);  // parsed from Excel: [{eventName, params:[]}]
-  const [results, setResults]       = useState([]);  // cross-check output
+function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) {
+  const [sdrRows, setSdrRows]       = useState([]);
+  const [results, setResults]       = useState([]);
   const [dragOver, setDragOver]     = useState(false);
   const [fileName, setFileName]     = useState("");
   const [manualEvent, setManualEvent]   = useState("");
-  const [manualParams, setManualParams] = useState([""]);  // array of param inputs
+  const [manualParams, setManualParams] = useState([""]);
   const [manualRows, setManualRows]     = useState([]);
   const [workbook, setWorkbook]         = useState(null);
   const [sheetNames, setSheetNames]     = useState([]);
   const [selectedSheet, setSelectedSheet] = useState("");
+  const [liveReport, setLiveReport]     = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError]   = useState(null);
   const fileRef = useRef();
 
   // GA4 live event inventory from audit
   const liveEvents = new Set(
     (auditData?.["GA4 Events"] || []).map(e => e.Check?.trim().toLowerCase())
   );
-  // Custom dimensions (parameters) from audit
-  const liveParams = new Set(
-    (auditData?.["Custom Dimension Details"] || []).map(e =>
-      e.Result?.["Parameter Name"]?.trim().toLowerCase()
-    ).filter(Boolean)
-  );
+  // Custom dimensions (parameters) from audit — all scopes combined
+  const liveParams = new Set([
+    ...(auditData?.["Custom Dimensions - Event Scoped"] || []),
+    ...(auditData?.["Custom Dimensions - User Scoped"]  || []),
+    ...(auditData?.["Custom Dimensions - Item Scoped"]  || []),
+  ].map(e => e.Result?.["Parameter Name"]?.trim().toLowerCase()).filter(Boolean));
 
   const STANDARD_PARAMS = new Set([
     "page_title","page_location","page_path","page_referrer","session_id",
@@ -334,6 +337,26 @@ function SDRChecker({ auditData }) {
   const addParamField = () => setManualParams(p => [...p, ""]);
   const updateParamField = (idx, val) => setManualParams(p => p.map((v,i) => i===idx ? val : v));
   const removeParamField = (idx) => setManualParams(p => p.filter((_,i) => i !== idx));
+
+  const fetchLiveReport = async () => {
+    if (!selectedProp || !tokenData) return;
+    const allEventRows = [...sdrRows, ...manualRows];
+    if (allEventRows.length === 0) return;
+    const eventNames = [...new Set(allEventRows.map(r => r.eventName))];
+    const allParams  = [...new Set(allEventRows.flatMap(r => r.params).filter(Boolean))];
+    setReportLoading(true); setReportError(null); setLiveReport(null);
+    try {
+      const res = await axios.post(
+        `${API}/sdr-report?property_id=${selectedProp}&start_date=${startDate||"30daysAgo"}&end_date=${endDate||"today"}`,
+        { events: eventNames, params: allParams },
+        { headers: { Authorization: `Bearer ${btoa(JSON.stringify(tokenData))}` } }
+      );
+      if (res.data.success) setLiveReport(res.data.report);
+      else setReportError(res.data.error || "Failed to fetch live report.");
+    } catch(e) {
+      setReportError("Request failed: " + (e.response?.data?.detail || e.message));
+    } finally { setReportLoading(false); }
+  };
 
   // ── Unique param stats ─────────────────────────────────────────────────
   const allRows = results.length > 0 ? results : [];
@@ -690,6 +713,96 @@ function SDRChecker({ auditData }) {
           Upload an SDR Excel file or add events manually above to start checking.
         </div>
       )}
+
+      {/* Live Data Report */}
+      {allRows.length > 0 && (
+        <div style={{ marginTop:"28px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"16px" }}>
+            <div>
+              <div style={{ fontSize:"18px", fontWeight:800, letterSpacing:"-0.5px", marginBottom:"4px" }}>Live GA4 Data Report</div>
+              <div style={{ fontSize:"13px", color:BL.lightGrey }}>
+                Fetch actual event counts and parameter values from GA4 for your SDR events.
+              </div>
+            </div>
+            <button
+              style={{ ...S.btnPrimary, width:"auto", padding:"11px 24px", opacity:reportLoading||!selectedProp?0.5:1, cursor:!selectedProp?"not-allowed":"pointer" }}
+              onClick={fetchLiveReport}
+              disabled={reportLoading || !selectedProp}
+            >
+              {reportLoading ? "Fetching…" : "Fetch Live Data →"}
+            </button>
+          </div>
+
+          {!selectedProp && (
+            <div style={S.infoBox}>ⓘ Select a GA4 property and run an audit first to enable live data fetching.</div>
+          )}
+          {reportError && <div style={S.errorBox}><strong>Error:</strong> {reportError}</div>}
+          {reportLoading && <div style={S.loadingBox}><div style={S.spinner}/><span>Querying GA4 Data API…</span></div>}
+
+          {liveReport && (
+            <div style={S.section}>
+              <div style={S.sectionHeader}>
+                <span style={S.sectionTitle}>Event Performance Report</span>
+                <span style={S.sectionCount}>{liveReport.length} events</span>
+              </div>
+              <div style={S.tableWrap}>
+                <table style={S.table}>
+                  <thead>
+                    <tr>
+                      <th style={S.th}>Event Name</th>
+                      <th style={S.th}>In GA4</th>
+                      <th style={S.th}>Event Count</th>
+                      <th style={S.th}>Total Users</th>
+                      <th style={S.th}>Parameter Values (Top 5)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {liveReport.map((row, i) => (
+                      <tr key={i}
+                        onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.03)"}
+                        onMouseLeave={e=>e.currentTarget.style.background="transparent"}
+                      >
+                        <td style={S.td}>
+                          <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:BL.white }}>{row.eventName}</span>
+                        </td>
+                        <td style={S.td}>
+                          {row.inGA4 ? <span style={S.pill(true)}>✓ Found</span> : <span style={S.pill(false)}>✗ Not found</span>}
+                        </td>
+                        <td style={S.td}>
+                          <span style={{ fontWeight:700, color:row.eventCount>0?BL.white:BL.lightGrey }}>
+                            {row.eventCount > 0 ? row.eventCount.toLocaleString() : "0"}
+                          </span>
+                        </td>
+                        <td style={S.td}>
+                          <span style={{ color:BL.lightGrey }}>{row.totalUsers > 0 ? row.totalUsers.toLocaleString() : "—"}</span>
+                        </td>
+                        <td style={S.td}>
+                          {Object.entries(row.paramData || {}).length > 0 ? (
+                            <div style={{ display:"flex", flexDirection:"column", gap:"6px" }}>
+                              {Object.entries(row.paramData).map(([param, values]) => (
+                                <div key={param}>
+                                  <span style={{ fontFamily:"monospace", fontSize:"11px", color:BL.info, marginRight:"6px" }}>{param}:</span>
+                                  {values.length > 0 ? (
+                                    <span style={{ fontSize:"11px", color:BL.lightGrey }}>
+                                      {values.slice(0,5).map(v => `${v.value} (${v.count.toLocaleString()})`).join(" · ")}
+                                    </span>
+                                  ) : (
+                                    <span style={{ fontSize:"11px", color:BL.lightGrey }}>no data</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : <span style={{ color:BL.lightGrey, fontSize:"12px" }}>—</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -922,7 +1035,44 @@ export default function App() {
                   {data["Streams Configuration"]?.length>0&&<AuditSection title="Streams Configuration" count={data["Streams Configuration"].length}><CheckResultTable entries={data["Streams Configuration"]}/></AuditSection>}
                   {data["GA4 Property Limits"]?.length>0&&<AuditSection title="GA4 Property Limits"><CheckResultTable entries={data["GA4 Property Limits"]}/></AuditSection>}
                   {data["GA4 Events"]?.length>0&&<AuditSection title="Event Inventory" count={data["GA4 Events"].length}><CheckResultTable entries={data["GA4 Events"]}/></AuditSection>}
-                  {data["Custom Dimension Details"]?.length>0&&<AuditSection title="Custom Dimension Details" count={data["Custom Dimension Details"].length}><AuditTable columns={["Display Name","Parameter Name","Scope"]} rows={data["Custom Dimension Details"].slice(0,15).map(e=>[e.Check,e.Result?.["Parameter Name"]??"—",e.Result?.Scope??"—"])}/></AuditSection>}
+
+                  {/* Custom Dimensions — split by scope */}
+                  {["Event Scoped","User Scoped","Item Scoped"].map(scope => {
+                    const key = `Custom Dimensions - ${scope}`;
+                    const entries = data[key];
+                    if (!entries?.length) return null;
+                    const scopeColor = scope==="Event Scoped"?BL.info:scope==="User Scoped"?BL.success:BL.warning;
+                    return (
+                      <AuditSection key={key} title={`Custom Dimensions — ${scope}`} count={entries.length}>
+                        <div style={S.tableWrap}>
+                          <table style={S.table}>
+                            <thead>
+                              <tr>
+                                <th style={S.th}>Display Name</th>
+                                <th style={S.th}>Parameter Name</th>
+                                <th style={S.th}>Scope</th>
+                                <th style={S.th}>Ads Personalization</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {entries.map((e,i) => (
+                                <tr key={i}
+                                  onMouseEnter={ev=>ev.currentTarget.style.background="rgba(255,255,255,0.03)"}
+                                  onMouseLeave={ev=>ev.currentTarget.style.background="transparent"}
+                                >
+                                  <td style={S.td}>{e.Check}</td>
+                                  <td style={S.td}><span style={{fontFamily:"monospace",fontSize:"12px",color:scopeColor}}>{e.Result?.["Parameter Name"]??"—"}</span></td>
+                                  <td style={S.td}><span style={{...S.pillNeutral,color:scopeColor,background:`${scopeColor}18`}}>{e.Result?.Scope??"—"}</span></td>
+                                  <td style={S.td}>{e.Result?.["Ads Personalization Excluded"]==="True"?<span style={S.pill(false)}>Excluded</span>:<span style={S.pill(true)}>Included</span>}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </AuditSection>
+                    );
+                  })}
+
                   {data["Key Event Details"]?.length>0&&<AuditSection title="Key Event Details" count={data["Key Event Details"].length}><AuditTable columns={["Event Name","Create Time","Counting Method"]} rows={data["Key Event Details"].slice(0,15).map(e=>[e.Check,e.Result?.["Create Time"]??"—",e.Result?.["Counting Method"]??"—"])}/></AuditSection>}
                   {data["PII Check"]?.length>0&&<AuditSection title="PII Check"><CheckResultTable entries={data["PII Check"]}/></AuditSection>}
                   {data["Transactions"]?.length>0&&<AuditSection title="Transaction Health"><CheckResultTable entries={data["Transactions"]}/></AuditSection>}
@@ -960,7 +1110,7 @@ export default function App() {
               )}
 
               {/* SDR Tab */}
-              {activeTab==="sdr"&&<SDRChecker auditData={data}/>}
+              {activeTab==="sdr"&&<SDRChecker auditData={data} selectedProp={selectedProp} tokenData={tokenData} startDate={startDate} endDate={endDate}/>}
 
               {/* Empty state when no audit yet */}
               {activeTab==="audit"&&!data&&!loading&&(
