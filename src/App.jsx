@@ -55,7 +55,7 @@ const S = {
   tableWrap: { overflowX:"auto" },
   table: { width:"100%", borderCollapse:"collapse", fontSize:"13px" },
   th: { padding:"10px 16px", textAlign:"left", fontSize:"11px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.8px", color:BL.lightGrey, background:"rgba(255,255,255,0.03)", borderBottom:`1px solid ${BL.border}`, whiteSpace:"nowrap" },
-  td: { padding:"11px 16px", borderBottom:`1px solid ${BL.border}`, color:"#1a1200", verticalAlign:"middle", lineHeight:"1.4" },
+  td: { padding:"11px 16px", borderBottom:`1px solid ${BL.border}`, color:"#000000", verticalAlign:"middle", lineHeight:"1.4" },
   pill: (ok) => ({ display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:ok?"rgba(0,122,92,0.12)":"rgba(204,34,0,0.12)", color:ok?BL.success:BL.danger }),
   pillWarning: { display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:"rgba(255,152,0,0.12)", color:BL.warning },
   pillNeutral: { display:"inline-flex", alignItems:"center", gap:"5px", padding:"3px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:600, background:"rgba(255,255,255,0.06)", color:BL.lightGrey },
@@ -94,7 +94,7 @@ function ResultCell({ value }) {
   const t = resultType(display);
   if (t === "ok")    return <span style={S.pill(true)}>✓ {display.replace("✅ ","")}</span>;
   if (t === "error") return <span style={S.pill(false)}>✗ {display.replace("❌ ","")}</span>;
-  return <span style={{ color:BL.lightGrey }}>{display}</span>;
+  return <span style={{ color:"#000000" }}>{display}</span>;
 }
 
 function extractKPIs(data) {
@@ -612,8 +612,8 @@ function DataExplorer({ selectedProp, tokenData, startDate, endDate, customDims 
                   <tbody>
                     {results.rows.map((row,i)=>(
                       <tr key={i} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,0.03)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                        <td style={{...S.td,color:BL.midGrey,textAlign:"center",fontSize:"11px"}}>{i+1}</td>
-                        {results.dimensions.map(d=><td key={d} style={S.td}>{row[d]||<span style={{color:BL.midGrey}}>(not set)</span>}</td>)}
+                        <td style={{...S.td,color:"#7a6f00",textAlign:"center",fontSize:"11px"}}>{i+1}</td>
+                        {results.dimensions.map(d=><td key={d} style={S.td}>{row[d]||<span style={{color:"#7a6f00"}}>(not set)</span>}</td>)}
                         {results.metrics.map(m=><td key={m} style={S.td}><span style={{fontWeight:600,color:"#1a1200"}}>{parseFloat(row[m])%1===0?parseInt(row[m]).toLocaleString():parseFloat(row[m]).toFixed(2)}</span></td>)}
                       </tr>
                     ))}
@@ -1172,7 +1172,7 @@ function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) 
                       onMouseLeave={e=>e.currentTarget.style.background="transparent"}
                     >
                       <td style={S.td}>
-                        <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:"#1a1200" }}>{r.eventName}</span>
+                        <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:"#000000" }}>{r.eventName}</span>
                       </td>
                       <td style={S.td}>
                         {r.params?.length > 0 ? (
@@ -1181,7 +1181,7 @@ function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) 
                               <span key={pi} style={{
                                 fontFamily:"monospace", fontSize:"11px", padding:"2px 8px", borderRadius:"4px",
                                 background: p.found ? "rgba(0,200,150,0.1)" : "rgba(255,152,0,0.1)",
-                                color: p.found ? BL.success : BL.warning,
+                                color: "#000000",
                                 border: `1px solid ${p.found ? "rgba(0,200,150,0.3)" : "rgba(255,152,0,0.3)"}`,
                               }}>
                                 {p.name}{p.isStandard ? " ⓘ" : ""}
@@ -1336,31 +1336,31 @@ function SDRChecker({ auditData, selectedProp, tokenData, startDate, endDate }) 
                         onMouseLeave={e=>e.currentTarget.style.background="transparent"}
                       >
                         <td style={S.td}>
-                          <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:"#1a1200" }}>{row.eventName}</span>
+                          <span style={{ fontFamily:"monospace", fontSize:"12px", fontWeight:700, color:"#000000" }}>{row.eventName}</span>
                         </td>
                         <td style={S.td}>
                           {row.inGA4 ? <span style={S.pill(true)}>✓ Found</span> : <span style={S.pill(false)}>✗ Not found</span>}
                         </td>
                         <td style={S.td}>
-                          <span style={{ fontWeight:700, color:row.eventCount>0?BL.white:BL.lightGrey }}>
+                          <span style={{ fontWeight:700, color:row.eventCount>0?"#000000":"#7a6f00" }}>
                             {row.eventCount > 0 ? row.eventCount.toLocaleString() : "0"}
                           </span>
                         </td>
                         <td style={S.td}>
-                          <span style={{ color:BL.lightGrey }}>{row.totalUsers > 0 ? row.totalUsers.toLocaleString() : "—"}</span>
+                          <span style={{ color:"#000000" }}>{row.totalUsers > 0 ? row.totalUsers.toLocaleString() : "—"}</span>
                         </td>
                         <td style={S.td}>
                           {Object.entries(row.paramData || {}).length > 0 ? (
                             <div style={{ display:"flex", flexDirection:"column", gap:"6px" }}>
                               {Object.entries(row.paramData).map(([param, values]) => (
                                 <div key={param}>
-                                  <span style={{ fontFamily:"monospace", fontSize:"11px", color:BL.info, marginRight:"6px" }}>{param}:</span>
+                                  <span style={{ fontFamily:"monospace", fontSize:"11px", color:"#00609a", fontWeight:700, marginRight:"6px" }}>{param}:</span>
                                   {values.length > 0 ? (
-                                    <span style={{ fontSize:"11px", color:BL.lightGrey }}>
+                                    <span style={{ fontSize:"11px", color:"#000000" }}>
                                       {values.slice(0,5).map(v => `${v.value} (${v.count.toLocaleString()})`).join(" · ")}
                                     </span>
                                   ) : (
-                                    <span style={{ fontSize:"11px", color:BL.lightGrey }}>no data</span>
+                                    <span style={{ fontSize:"11px", color:"#000000" }}>no data</span>
                                   )}
                                 </div>
                               ))}
@@ -1533,7 +1533,7 @@ export default function App() {
         ::-webkit-scrollbar-track{background:#f5f0d0;}
         ::-webkit-scrollbar-thumb{background:#c8b800;border-radius:3px;}
         option{background:#fffceb;color:#1a1200;}
-        code{background:rgba(200,184,0,0.15);color:#1a1200;font-weight:600;padding:1px 5px;border-radius:3px;font-size:11px;border:1px solid rgba(200,184,0,0.3);}
+        code{background:#fff8c0;color:#000000;font-weight:700;padding:2px 6px;border-radius:3px;font-size:11px;border:1px solid #c8b800;}
       `}</style>
       <div style={S.root}>
 
